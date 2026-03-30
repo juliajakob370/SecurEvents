@@ -4,7 +4,7 @@ import "../../styles/SecurEventsStyle.css";
 import "../../styles/Login&SignUp.css";
 import logo from "../../assets/SecureEventLogo.png";
 
-const LoginPage: React.FC = () => {
+const LoginCodePage: React.FC = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
               </div>
 
               {/* ROW 1: LOG IN Title - Centered */}
-              <h2 className="login-title">Welcome back! What's your email?</h2>
+              <h2 className="login-title">This is the login pagegeee</h2>
 
               {/* ROW 2-5: Form with Send Code button */}
               <form onSubmit={handleSubmit} className="login-form">
@@ -67,16 +67,6 @@ const LoginPage: React.FC = () => {
               </form>
 
             </div>
-
-            {/* ROW 5: Don't have account? Link */}
-            <div className="auth-footer">
-              <p className="auth-footer-text">
-                Don't have an account?{" "}
-                <Link to="/signup" className="signup-link-button">
-                  Sign up here!
-                </Link>
-              </p>
-            </div>
           </div>
         </div>
       </div>
@@ -84,4 +74,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default LoginCodePage;

@@ -41,7 +41,7 @@ function LandingPage() {
                             <img src={eventImg} alt="Event" className="landing-event-image" />
                         </div>
 
-                        <div className="global-description-box">
+                        <div className="global-content-box">
                             <h2>Welcome to SecurEvents</h2>
                             <p>
                                 Securely browse events, book tickets, and manage your event experience.

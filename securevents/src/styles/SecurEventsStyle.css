@@ -68,25 +68,20 @@ body {
     color: #ddd;
 }
 
-.global-description-box {
-    color: white;
-}
 
-.global-description-box h2 {
+.global-content-box h2 {
     font-size: 32px;
     margin-bottom: 15px;
     color: #c084fc;
 }
 
-.global-description-box p {
+.global-content-box p {
     font-size: 16px;
     line-height: 1.6;
     color: #ddd;
 }
 
-.white-form-card {
-    width: 50%;
-    height: 100%;
-    background-color:#fffdfd;
-    
+.global-logo {
+    width: 150px;
 }
+
