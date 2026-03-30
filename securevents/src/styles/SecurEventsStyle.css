@@ -50,37 +50,6 @@ body {
     color: #c084fc;
 }
 
-.signup-btn {
-    background: linear-gradient(135deg, #9333ea, #c084fc);
-    color: white;
-}
-
-.login-btn {
-    background: transparent;
-    border: 1px solid #c084fc;
-    color: #c084fc;
-}
-
-.signup-btn:hover {
-    transform: scale(1.05);
-}
-
-.login-btn:hover {
-    background: #c084fc;
-    color: #1a0b2e;
-}
-
-/* LOGO */
-.global-logo-wrapper {
-    text-align: center;
-    margin: 40px 0;
-}
-
-.global-logo {
-    width: 400px;
-    max-width: 100%;
-}
-
 /* CONTENT */
 .global-content {
     display: grid;
@@ -115,16 +84,9 @@ body {
     color: #ddd;
 }
 
-/* MOBILE */
-@media (max-width: 768px) {
-    .global-content {
-        grid-template-columns: 1fr;
-    }
-}
-
-.global-event-image {
-    width: 100%;
+.white-form-card {
+    width: 50%;
     height: 100%;
-    object-fit: cover;
-    border-radius: 12px;
+    background-color:#fffdfd;
+    
 }

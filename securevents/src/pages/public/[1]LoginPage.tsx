@@ -25,10 +25,8 @@ const LoginPage: React.FC = () => {
   return (
     <div className="global-page">
       {" "}
-      {/* Reusing global bg + center */}
       <div className="global-container auth-container">
         {" "}
-        {/* Same glassmorphism */}
         <header className="global-header">
           <img
             src={logo}
@@ -36,9 +34,6 @@ const LoginPage: React.FC = () => {
             className="global-logo"
             style={{ width: "200px" }}
           />
-          <Link to="/signup" className="signup-btn">
-            Sign Up
-          </Link>
         </header>
         <div
           className="global-content auth-form"
@@ -47,7 +42,7 @@ const LoginPage: React.FC = () => {
           <div className="global-description-box">
             <div className="white-form-card">
               <h2>Welcome Back</h2>
-              <form onSubmit={handleSubmit} className="space-y-6 mt-8">
+              <form onSubmit={handleSubmit} className="login-form">
                 <input
                   type="email"
                   name="email"

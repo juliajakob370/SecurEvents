@@ -1,5 +1,6 @@
 import '../../styles/SecurEventsStyle.css';
 import logo from '../../assets/SecureEventLogo.png';
+import "../../styles/[0]LandingPage.css";
 import eventImg from '../../assets/EventImg.jpg';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,13 +32,13 @@ function LandingPage() {
                 </header>
 
                 <main className="global-main">
-                    <div className="global-logo-wrapper">
-                        <img src={logo} alt="SecurEvents logo" className="global-logo" />
+                    <div className="landing-logo-wrapper">
+                        <img src={logo} alt="SecurEvents logo" className="landing-logo" />
                     </div>
 
                     <div className="global-content">
                         <div className="global-image-box">
-                            <img src={eventImg} alt="Event" className="global-event-image" />
+                            <img src={eventImg} alt="Event" className="landing-event-image" />
                         </div>
 
                         <div className="global-description-box">
