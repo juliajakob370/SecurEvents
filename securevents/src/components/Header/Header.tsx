@@ -7,10 +7,11 @@ import defaultProfile from "../../assets/profilePics/profile1.png";
 import MenuDropdown from "../MenuDropdown/MenuDropdown";
 
 const menuItems = [
-  { label: "My Tickets", icon: "bi-ticket", path: "/tickets" },
-  { label: "My Events", icon: "bi-calendar-event", path: "/events" },
-  { label: "Post Event", icon: "bi-plus-circle", path: "/post-event" },
-  { label: "Log Out", icon: "bi-box-arrow-right", path: "/" }
+    { label: "My Tickets", icon: "bi-ticket", path: "/my-tickets" },
+    { label: "My Events", icon: "bi-calendar-event", path: "/my-events" },
+    { label: "Post Event", icon: "bi-plus-circle", path: "/create-event" },
+    { label: "About", icon: "bi-info-circle", path: "/about-dashboard" },
+    { label: "Log Out", icon: "bi-box-arrow-right", path: "/" }
 ];
 
 type HeaderProps = {
