@@ -1,3 +1,4 @@
+// Imports: React router, icons, and page routes.
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import "bootstrap-icons/font/bootstrap-icons.css";
 import LandingPage from './pages/public/[0]LandingPage';
@@ -11,9 +12,11 @@ import AboutPage from "./pages/public/[0.1]AboutPage";
 import AboutDashboardPage from "./pages/dashboard/[11]AboutPage";
 import AccountPage from "./pages/dashboard/[4]AccountPage";
 import MyEventsPage from "./pages/dashboard/[7]MyEventsPage";
+import GetTicketsPage from "./pages/dashboard/[9]GetTicketsPage";
+import PaymentPage from "./pages/dashboard/[9.1]PaymentPage";
+import TicketBookedConfirmation from "./pages/dashboard/[9.2]TicketBookedConfirmation";
 
-
-
+// Main app router.
 function App() {
     return (
         <Router>
@@ -29,6 +32,9 @@ function App() {
                 <Route path="/about-dashboard" element={<AboutDashboardPage />} />
                 <Route path="/account" element={<AccountPage />} />
                 <Route path="/my-events" element={<MyEventsPage />} />
+                <Route path="/get-tickets" element={<GetTicketsPage />} />
+                <Route path="/payment" element={<PaymentPage />} />
+                <Route path="/ticket-booked" element={<TicketBookedConfirmation />} />
             </Routes>
         </Router>
     );
