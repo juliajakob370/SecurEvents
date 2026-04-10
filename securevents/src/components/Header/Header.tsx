@@ -10,6 +10,7 @@ const menuItems = [
   { label: "My Tickets", icon: "bi-ticket-perforated", path: "/tickets" },
   { label: "My Events", icon: "bi-calendar-event", path: "/my-events" },
   { label: "Post Event", icon: "bi-plus-circle", path: "/post-event" },
+  { label: "About", icon: "bi-info-circle", path: "/about-dashboard" },
   { label: "Log Out", icon: "bi-box-arrow-right", path: "/" },
 ];
 
