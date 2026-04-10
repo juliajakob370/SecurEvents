@@ -33,14 +33,21 @@ const AccountPage: React.FC = () => {
     const [showPopup, setShowPopup] = useState(false);
 
     // State for payment info.
-    const [cardName, setCardName] = useState("Current Name");
-    const [cardLast4, setCardLast4] = useState("4242");
-    const [billingAddress, setBillingAddress] = useState("123 Example Street, Waterloo, ON");
-
+    const [cardName, setCardName] = useState("");
+    const [cardNumber, setCardNumber] = useState("");
+    const [expiryDate, setExpiryDate] = useState("");
+    const [cvv, setCvv] = useState("");
+    const [billingAddress, setBillingAddress] = useState("");
+    const [savedCard, setSavedCard] = useState(false);
+    const handleSaveCard = () => {
+        if (cardName && cardNumber && expiryDate && cvv && billingAddress) {
+            setSavedCard(true);
+        }
+    };
     return (
         <div style={{ padding: "20px" }}>
             {/* Header */}
-            <Header centerType="title" title="MY ACCOUNT" showHome={true} />
+            <Header centerType="title" title="My Account" showHome={true} />
 
             {/* Main scroll container */}
             <div className="events-container">
@@ -103,58 +110,101 @@ const AccountPage: React.FC = () => {
                             <div className="account-section-card">
                                 <div className="account-section-header">
                                     <h3>Payment Information</h3>
-                                    <p>Manage your saved payment details</p>
+                                    <p>Add and manage your saved card details</p>
                                 </div>
 
-                                <div className="payment-info-box">
-                                    <div className="payment-card-preview">
-                                        <div className="payment-card-top">
-                                            <span className="payment-chip"></span>
-                                            <span className="payment-brand">VISA</span>
-                                        </div>
+                                {!savedCard ? (
+                                    <div className="payment-form-box">
+                                        <div className="account-form-grid">
+                                            <div className="account-field">
+                                                <label>Name on Card</label>
+                                                <input
+                                                    type="text"
+                                                    value={cardName}
+                                                    onChange={(e) => setCardName(e.target.value)}
+                                                    placeholder="Enter cardholder name"
+                                                />
+                                            </div>
 
-                                        <div className="payment-card-number">
-                                            •••• •••• •••• {cardLast4}
-                                        </div>
+                                            <div className="account-field">
+                                                <label>Card Number</label>
+                                                <input
+                                                    type="text"
+                                                    value={cardNumber}
+                                                    onChange={(e) => setCardNumber(e.target.value)}
+                                                    placeholder="1234 5678 9012 3456"
+                                                />
+                                            </div>
 
-                                        <div className="payment-card-bottom">
-                                            <div>
-                                                <small>Card Holder</small>
-                                                <p>{cardName}</p>
+                                            <div className="account-field">
+                                                <label>Expiry Date</label>
+                                                <input
+                                                    type="text"
+                                                    value={expiryDate}
+                                                    onChange={(e) => setExpiryDate(e.target.value)}
+                                                    placeholder="MM/YY"
+                                                />
+                                            </div>
+
+                                            <div className="account-field">
+                                                <label>CVV</label>
+                                                <input
+                                                    type="password"
+                                                    value={cvv}
+                                                    onChange={(e) => setCvv(e.target.value)}
+                                                    placeholder="123"
+                                                />
+                                            </div>
+
+                                            <div className="account-field account-field-full">
+                                                <label>Billing Address</label>
+                                                <input
+                                                    type="text"
+                                                    value={billingAddress}
+                                                    onChange={(e) => setBillingAddress(e.target.value)}
+                                                    placeholder="Enter billing address"
+                                                />
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div className="account-form-grid">
-                                        <div className="account-field">
-                                            <label>Name on Card</label>
-                                            <input
-                                                type="text"
-                                                value={cardName}
-                                                onChange={(e) => setCardName(e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="account-field">
-                                            <label>Last 4 Digits</label>
-                                            <input
-                                                type="text"
-                                                maxLength={4}
-                                                value={cardLast4}
-                                                onChange={(e) => setCardLast4(e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="account-field account-field-full">
-                                            <label>Billing Address</label>
-                                            <input
-                                                type="text"
-                                                value={billingAddress}
-                                                onChange={(e) => setBillingAddress(e.target.value)}
-                                            />
+                                        <div className="account-actions-row">
+                                            <button className="save-account-btn" onClick={handleSaveCard}>
+                                                Add Card
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="payment-info-box">
+                                        <div className="payment-card-preview">
+                                            <div className="payment-card-top">
+                                                <span className="payment-chip"></span>
+                                                <span className="payment-brand">VISA</span>
+                                            </div>
+
+                                            <div className="payment-card-number">
+                                                •••• •••• •••• {cardNumber.slice(-4)}
+                                            </div>
+
+                                            <div className="payment-card-bottom">
+                                                <div>
+                                                    <small>Card Holder</small>
+                                                    <p>{cardName}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="billing-summary">
+                                            <p><strong>Expiry:</strong> {expiryDate}</p>
+                                            <p><strong>Billing Address:</strong> {billingAddress}</p>
+                                        </div>
+
+                                        <div className="account-actions-row">
+                                            <button className="change-picture-btn" onClick={() => setSavedCard(false)}>
+                                                Edit Card
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Save button row */}
@@ -207,5 +257,6 @@ const AccountPage: React.FC = () => {
         </div>
     );
 };
+
 
 export default AccountPage;
