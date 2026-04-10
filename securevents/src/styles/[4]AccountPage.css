@@ -351,3 +351,20 @@
         width: 100%;
     }
 }
+.payment-form-box {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.billing-summary {
+    background: #faf7ff;
+    border: 1px solid #eadcff;
+    border-radius: 16px;
+    padding: 18px;
+    color: #4c2f77;
+}
+
+    .billing-summary p {
+        margin: 8px 0;
+    }
