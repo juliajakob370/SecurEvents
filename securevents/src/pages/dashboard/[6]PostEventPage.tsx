@@ -59,7 +59,7 @@ const PostEventPage: React.FC = () => {
       dateTime: `${date} • ${time}`,
       description,
       capacity,
-      status: fullDateTime < new Date() ? "past" : "active"
+      status: fullDateTime < new Date() ? "past" : "active",
     };
 
     addEvent(newEvent);
@@ -78,6 +78,15 @@ const PostEventPage: React.FC = () => {
     navigate("/main");
   };
 
+  const isFormValid =
+    title.trim() !== "" &&
+    date !== "" &&
+    time !== "" &&
+    location.trim() !== "" &&
+    description.trim() !== "" &&
+    capacity > 0 &&
+    (isFree || price.trim() !== "");
+
   return (
     <div style={{ padding: "20px" }}>
       <Header centerType="title" title="POST EVENT" showProfile={true} />
@@ -85,71 +94,69 @@ const PostEventPage: React.FC = () => {
       <div className="events-container">
         <div className="events-scroll tickets-scroll">
           <div className="post-event-layout">
-
             {/* LEFT */}
-           <div className="post-left-card">
-                <div className="image-container">
-                  <img src={image || defaultImage} alt="Event" />
-                </div>
+            <div className="post-left-card">
+              <div className="image-container">
+                <img src={image || defaultImage} alt="Event" />
+              </div>
 
-                <label className="upload-btn">
-                  <i className="bi bi-upload"></i>
-                  Choose Image
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    hidden
-                  />
-                </label>
+              <label className="upload-btn">
+                <i className="bi bi-upload"></i>
+                Choose Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  hidden
+                />
+              </label>
 
-                <div className="capacity-row">
-                  <span className="capacity-label">
-                    <i className="bi bi-people-fill"></i> Capacity
-                  </span>
+              <div className="capacity-row">
+                <span className="capacity-label">
+                  <i className="bi bi-people-fill"></i> Capacity
+                </span>
 
-                  <input
-                    type="number"
-                    min="1"
-                    value={capacity}
-                    onChange={(e) => setCapacity(Number(e.target.value))}
-                  />
-                </div>
+                <input
+                  type="number"
+                  min="1"
+                  value={capacity}
+                  onChange={(e) => setCapacity(Number(e.target.value))}
+                />
+              </div>
 
-                <div className="price-section">
-                  <span className="price-label">
-                    <i className="bi bi-ticket-perforated"></i>
-                    Price Per Ticket
-                  </span>
+              <div className="price-section">
+                <span className="price-label">
+                  <i className="bi bi-ticket-perforated"></i>
+                  Price Per Ticket
+                </span>
 
-                  <div className={`price-right-col ${isFree ? "disabled" : ""}`}>
-                    <label className="checkbox-row light">
-                      <input
-                        type="checkbox"
-                        checked={isFree}
-                        onChange={() => setIsFree(!isFree)}
-                      />
-                      Free Event?
-                    </label>
+                <div className={`price-right-col ${isFree ? "disabled" : ""}`}>
+                  <label className="checkbox-row light">
+                    <input
+                      type="checkbox"
+                      checked={isFree}
+                      onChange={() => setIsFree(!isFree)}
+                    />
+                    Free Event?
+                  </label>
 
-                    <div className="price-input-clean">
-                      <span>$</span>
-                      <input
-                        type="number"
-                        placeholder={isFree ? "0.00" : "Enter ticket price"}
-                        disabled={isFree}
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                      />
-                    </div>
+                  <div className="price-input-clean">
+                    <span>$</span>
+                    <input
+                      type="number"
+                      placeholder={isFree ? "0.00" : "Enter ticket price"}
+                      disabled={isFree}
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                    />
                   </div>
                 </div>
               </div>
+            </div>
 
             {/* RIGHT */}
             <div className="post-right ticket-selection-card">
               <div className="post-form-inner">
-
                 <div className="form-group">
                   <input
                     type="text"
@@ -204,12 +211,11 @@ const PostEventPage: React.FC = () => {
               <button
                 className="post-event-btn"
                 onClick={handleSubmit}
-                disabled={!title || !date || !time || !location}
+                disabled={!isFormValid}
               >
                 Post Event!
               </button>
             </div>
-
           </div>
         </div>
       </div>
