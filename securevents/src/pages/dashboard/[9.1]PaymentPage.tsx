@@ -1,51 +1,65 @@
-// Imports: React state/effect, router hooks, reusable header, and styles.
-import React, { useEffect, useState } from "react";
+// Imports: React hooks, router hooks, reusable header, and styles.
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import "../../styles/MainPage.css";
 import "../../styles/[9.1]PaymentPage.css";
 
-// Card type used in payment page.
+// Type for selected event.
+type SelectedEvent = {
+    title: string;
+    organizer: string;
+    location: string;
+    price: string;
+    image: string;
+    date: string;
+    time: string;
+    description: string;
+    status: string;
+    capacity: number;
+};
+
+// Type for locally saved card.
 type SavedCard = {
     id: number;
     cardName: string;
-    cardNumber: string;
+    cardLast4: string;
     expiryDate: string;
     billingAddress: string;
 };
 
-// Payment page component.
+// Payment page.
 const PaymentPage: React.FC = () => {
+    // Router tools.
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Event and order info passed from Get Tickets page.
-    const event = location.state?.event;
-    const total = location.state?.total || 0;
+    // Booking data from Get Tickets page.
+    const event = location.state?.event as SelectedEvent | undefined;
     const quantity = location.state?.quantity || 1;
+    const total = location.state?.total || 0;
 
-    // Saved cards loaded from localStorage.
+    // Saved cards state.
     const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
     const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
-    // Toggle for add-new-card form.
-    const [showNewCardForm, setShowNewCardForm] = useState(false);
-
     // New card form state.
+    const [showNewCardForm, setShowNewCardForm] = useState(false);
     const [cardName, setCardName] = useState("");
     const [cardNumber, setCardNumber] = useState("");
     const [expiryDate, setExpiryDate] = useState("");
     const [cvv, setCvv] = useState("");
     const [billingAddress, setBillingAddress] = useState("");
 
-    // Secure verification state.
+    // Phone verification state.
     const [phoneNumber, setPhoneNumber] = useState("");
     const [verificationCode, setVerificationCode] = useState("");
     const [codeSent, setCodeSent] = useState(false);
 
-    // Load cards from localStorage when page opens.
+    // Load saved cards from localStorage.
     useEffect(() => {
         const storedCards = localStorage.getItem("secureEventsCards");
+
         if (storedCards) {
             const parsedCards: SavedCard[] = JSON.parse(storedCards);
             setSavedCards(parsedCards);
@@ -56,14 +70,30 @@ const PaymentPage: React.FC = () => {
         }
     }, []);
 
-    // Save a new card locally.
+    // Selected card details.
+    const selectedCard = useMemo(() => {
+        return savedCards.find((card) => card.id === selectedCardId) || null;
+    }, [savedCards, selectedCardId]);
+
+    // Save a new card securely for demo purposes.
+    // Note: CVV is never stored.
     const handleAddNewCard = () => {
-        if (!cardName || !cardNumber || !expiryDate || !billingAddress) return;
+        if (!cardName || !cardNumber || !expiryDate || !billingAddress || !cvv) {
+            alert("Please complete all card fields.");
+            return;
+        }
+
+        const digitsOnly = cardNumber.replace(/\D/g, "");
+
+        if (digitsOnly.length < 12) {
+            alert("Card number looks invalid.");
+            return;
+        }
 
         const newCard: SavedCard = {
             id: Date.now(),
             cardName,
-            cardNumber,
+            cardLast4: digitsOnly.slice(-4),
             expiryDate,
             billingAddress
         };
@@ -81,31 +111,51 @@ const PaymentPage: React.FC = () => {
         setShowNewCardForm(false);
     };
 
-    // Simulate sending secure payment code.
+    // Simulate sending phone verification code.
     const handleSendCode = () => {
-        if (!phoneNumber) return;
+        if (!phoneNumber) {
+            alert("Please enter your phone number.");
+            return;
+        }
+
         setCodeSent(true);
     };
 
-    // Final payment confirmation.
+    // Final secure payment confirmation.
     const handleConfirmPayment = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!selectedCardId || !verificationCode) return;
+        if (!event) {
+            alert("No event selected.");
+            return;
+        }
+
+        if (!selectedCardId) {
+            alert("Please select a payment card.");
+            return;
+        }
+
+        if (!codeSent || !verificationCode) {
+            alert("Please complete phone verification.");
+            return;
+        }
 
         navigate("/ticket-booked", {
             state: {
                 event,
+                quantity,
                 total,
-                quantity
+                selectedCard
             }
         });
     };
 
     return (
         <div style={{ padding: "20px" }}>
+            {/* Header */}
             <Header centerType="title" title="Payment" showHome={true} />
 
+            {/* Main container */}
             <div className="events-container">
                 <div className="events-scroll payment-scroll">
                     <div className="payment-page-layout">
@@ -117,6 +167,8 @@ const PaymentPage: React.FC = () => {
                                 <>
                                     <p><strong>Event:</strong> {event.title}</p>
                                     <p><strong>Organizer:</strong> {event.organizer}</p>
+                                    <p><strong>Date:</strong> {event.date}</p>
+                                    <p><strong>Time:</strong> {event.time}</p>
                                     <p><strong>Tickets:</strong> {quantity}</p>
                                     <p><strong>Total Amount:</strong> ${Number(total).toFixed(2)}</p>
                                 </>
@@ -125,11 +177,11 @@ const PaymentPage: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Payment form area */}
+                        {/* Payment form card */}
                         <div className="payment-form-card">
                             <h2>Choose Payment Method</h2>
 
-                            {/* Saved cards list */}
+                            {/* Saved cards section */}
                             {savedCards.length > 0 && (
                                 <div className="saved-cards-section">
                                     <h3>Saved Cards</h3>
@@ -146,7 +198,7 @@ const PaymentPage: React.FC = () => {
 
                                                 <div className="saved-card-box">
                                                     <p><strong>{card.cardName}</strong></p>
-                                                    <p>•••• •••• •••• {card.cardNumber.slice(-4)}</p>
+                                                    <p>•••• •••• •••• {card.cardLast4}</p>
                                                     <p>{card.expiryDate}</p>
                                                 </div>
                                             </label>
@@ -155,7 +207,7 @@ const PaymentPage: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* Toggle add new card */}
+                            {/* Add new card toggle */}
                             <div className="payment-action-row">
                                 <button
                                     type="button"
@@ -166,7 +218,7 @@ const PaymentPage: React.FC = () => {
                                 </button>
                             </div>
 
-                            {/* Add new card form */}
+                            {/* New card form */}
                             {showNewCardForm && (
                                 <div className="new-card-form-box">
                                     <div className="payment-form-grid">
@@ -185,6 +237,7 @@ const PaymentPage: React.FC = () => {
                                                 type="text"
                                                 value={cardNumber}
                                                 onChange={(e) => setCardNumber(e.target.value)}
+                                                placeholder="1234 5678 9012 3456"
                                             />
                                         </div>
 
@@ -204,6 +257,7 @@ const PaymentPage: React.FC = () => {
                                                 type="password"
                                                 value={cvv}
                                                 onChange={(e) => setCvv(e.target.value)}
+                                                placeholder="123"
                                             />
                                         </div>
 
@@ -229,7 +283,7 @@ const PaymentPage: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* Secure phone verification */}
+                            {/* Security verification form */}
                             <form onSubmit={handleConfirmPayment} className="payment-form">
                                 <h3>Security Verification</h3>
 
