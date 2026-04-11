@@ -5,6 +5,7 @@ import Header from "../../components/Header/Header";
 import "../../styles/MainPage.css";
 import "../../styles/PostEventPage.css";
 import defaultImage from "../../assets/default-image.png";
+import { createEvent } from "../../api/eventApi";
 
 const PostEventPage: React.FC = () => {
   const [title, setTitle] = useState("");
@@ -84,42 +85,50 @@ const PostEventPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
+    // Submit event to backend and then update frontend state.
+    const handleSubmit = async () => {
+        if (!validateForm()) return;
 
-    const fullDateTime = new Date(`${date}T${time}`);
+        const fullDateTime = new Date(`${date}T${time}`);
 
-    const newEvent = {
-      title: title.trim(),
-      organizer: "You",
-      location: location.trim(),
-      price: isFree ? "Free" : `$${Number(price).toFixed(2)}`,
-      image: image || defaultImage,
+        const newEvent = {
+            title: title.trim(),
+            organizer: "You",
+            location: location.trim(),
+            price: isFree ? "Free" : `$${Number(price).toFixed(2)}`,
+            image: image || defaultImage,
+            date,
+            time,
+            description: description.trim(),
+            capacity,
+            status: fullDateTime < new Date() ? "past" : "active",
+        };
 
-      date,
-      time,
-      dateTime: `${date} • ${time}`,
+        try {
+            // Send event to backend API.
+            const savedEvent = await createEvent(newEvent);
 
-      description: description.trim(),
-      capacity,
-      status: fullDateTime < new Date() ? "past" : "active",
+            // Update frontend state with backend response.
+            addEvent(savedEvent);
+
+            // Reset form after success.
+            setTitle("");
+            setDate("");
+            setTime("");
+            setLocation("");
+            setDescription("");
+            setPrice("");
+            setImage(null);
+            setCapacity(50);
+            setIsFree(false);
+            setErrors({});
+
+            navigate("/main");
+        } catch (error) {
+            console.error("Failed to create event:", error);
+            alert("Could not post event. Please try again.");
+        }
     };
-
-    addEvent(newEvent);
-
-    setTitle("");
-    setDate("");
-    setTime("");
-    setLocation("");
-    setDescription("");
-    setPrice("");
-    setImage(null);
-    setCapacity(50);
-    setIsFree(false);
-    setErrors({});
-
-    navigate("/main");
-  };
 
   const isFormValid =
     title.trim() &&

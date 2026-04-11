@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../../styles/SecurEventsStyle.css";
 import "../../styles/Login&SignUp.css";
 import logo from "../../assets/SecureEventLogo.png";
+import { requestLoginCode } from "../../api/authApi";
 
 // Login page component.
 const LoginPage: React.FC = () => {
@@ -45,17 +46,24 @@ const LoginPage: React.FC = () => {
     };
 
     // Submit login request.
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!validateForm()) return;
 
-        setLoading(true);
+        try {
+            setLoading(true);
+            await requestLoginCode(formData.email.trim());
 
-        setTimeout(() => {
+            navigate("/login-code", {
+                state: { email: formData.email.trim() }
+            });
+        } catch (error) {
+            console.error(error);
+            setError("Could not send login code.");
+        } finally {
             setLoading(false);
-            navigate("/login-code", { state: { email: formData.email.trim() } });
-        }, 1500);
+        }
     };
 
     return (

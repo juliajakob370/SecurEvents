@@ -1,5 +1,6 @@
 // Imports: React tools for context, state, and lifecycle.
 import React, { createContext, useEffect, useState } from "react";
+import { getEvents } from "../api/eventApi"
 
 // Event type that matches the event structure used across the frontend.
 export type EventItem = {
@@ -45,20 +46,28 @@ export const EventProvider: React.FC<Props> = ({ children }) => {
 
     // Load saved user-created events from localStorage when app starts.
     useEffect(() => {
-        const savedEvents = localStorage.getItem("secureEventsPostedEvents");
-
-        if (savedEvents) {
+        async function loadEvents() {
             try {
-                const parsedEvents = JSON.parse(savedEvents);
-
-                if (Array.isArray(parsedEvents)) {
-                    setEvents(parsedEvents);
-                }
+                const backendEvents = await getEvents();
+                setEvents(backendEvents);
             } catch (error) {
-                console.error("Failed to load saved events:", error);
-                setEvents([]);
+                console.error("Failed to load backend events:", error);
+
+                const savedEvents = localStorage.getItem("secureEventsPostedEvents");
+                if (savedEvents) {
+                    try {
+                        const parsedEvents = JSON.parse(savedEvents);
+                        if (Array.isArray(parsedEvents)) {
+                            setEvents(parsedEvents);
+                        }
+                    } catch {
+                        setEvents([]);
+                    }
+                }
             }
         }
+
+        loadEvents();
     }, []);
 
     // Save current event list to localStorage whenever it changes.

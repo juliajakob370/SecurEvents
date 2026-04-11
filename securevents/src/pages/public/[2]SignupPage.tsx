@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../../styles/SecurEventsStyle.css";
 import "../../styles/Login&SignUp.css";
 import logo from "../../assets/SecureEventLogo.png";
+import { requestSignupCode } from "../../api/authApi";
 
 // Signup page component.
 const SignupPage: React.FC = () => {
@@ -54,24 +55,33 @@ const SignupPage: React.FC = () => {
     };
 
     // Submit signup form.
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!validateForm()) return;
 
-        setLoading(true);
+        try {
+            setLoading(true);
 
-        setTimeout(() => {
-            setLoading(false);
+            await requestSignupCode(
+                formData.firstName.trim(),
+                formData.lastName.trim(),
+                formData.email.trim()
+            );
+
             navigate("/signup-code", {
                 state: {
                     firstName: formData.firstName.trim(),
                     email: formData.email.trim()
                 }
             });
-        }, 1500);
+        } catch (error) {
+            console.error(error);
+            setErrors({ email: "Could not start signup." });
+        } finally {
+            setLoading(false);
+        }
     };
-
     return (
         <div className="global-page">
             <div className="global-container auth-container">

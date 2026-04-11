@@ -4,6 +4,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/SecurEventsStyle.css";
 import "../../styles/Login&SignUp.css";
 import logo from "../../assets/SecureEventLogo.png";
+import { verifyLoginCode } from "../../api/authApi";
+import { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
 
 // Login code page component.
 const LoginCodePage: React.FC = () => {
@@ -17,6 +20,8 @@ const LoginCodePage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const email = location.state?.email || "";
+
+    const { refreshUser } = useContext(AuthContext);
 
     // Update code input.
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,17 +43,22 @@ const LoginCodePage: React.FC = () => {
     };
 
     // Submit code form.
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!validateForm()) return;
 
-        setLoading(true);
-
-        setTimeout(() => {
-            setLoading(false);
+        try {
+            setLoading(true);
+            await verifyLoginCode(email, formData.code);
+            await refreshUser();
             navigate("/main");
-        }, 1500);
+        } catch (error) {
+            console.error(error);
+            setError("Could not verify login code.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

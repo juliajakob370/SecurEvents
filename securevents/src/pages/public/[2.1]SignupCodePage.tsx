@@ -4,6 +4,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/SecurEventsStyle.css";
 import "../../styles/Login&SignUp.css";
 import logo from "../../assets/SecureEventLogo.png";
+import { verifySignupCode } from "../../api/authApi";
+import { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
 
 // Signup code page component.
 const SignupCodePage: React.FC = () => {
@@ -19,6 +22,7 @@ const SignupCodePage: React.FC = () => {
 
     const firstName = location.state?.firstName || "";
     const email = location.state?.email || "";
+    const { refreshUser } = useContext(AuthContext);
 
     // Update code input.
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,18 +44,22 @@ const SignupCodePage: React.FC = () => {
     };
 
     // Submit verification code.
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!validateForm()) return;
 
-        setLoading(true);
-
-        setTimeout(() => {
-            setLoading(false);
-            console.log("Signup code submitted:", formData.code);
+        try {
+            setLoading(true);
+            await verifySignupCode(email, formData.code);
+            await refreshUser();
             navigate("/main");
-        }, 1500);
+        } catch (error) {
+            console.error(error);
+            setError("Could not verify signup code.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
