@@ -288,8 +288,8 @@
 }
 
 .price-input-clean input:disabled {
-  border-bottom: 2px dashed #d1c4ff;  /* softer border */
-  color: #7c5ae29a;                     /* muted text */
+  border-bottom: 2px dashed #d1c4ff;  
+  color: #7c5ae29a;                    
   cursor: not-allowed;
   background: transparent;
 }
@@ -297,3 +297,5 @@
 .price-input-clean input:disabled::placeholder {
   color: #c4b5fd;
 }
+
+
