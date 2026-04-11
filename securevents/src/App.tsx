@@ -15,6 +15,9 @@ import MyEventsPage from "./pages/dashboard/[7]MyEventsPage";
 import GetTicketsPage from "./pages/dashboard/[9]GetTicketsPage";
 import PaymentPage from "./pages/dashboard/[9.1]PaymentPage";
 import TicketBookedConfirmation from "./pages/dashboard/[9.2]TicketBookedConfirmation";
+import PostEventPage from "./pages/dashboard/[6]PostEventPage";
+
+
 
 // Main app router.
 function App() {
@@ -35,6 +38,7 @@ function App() {
                 <Route path="/get-tickets" element={<GetTicketsPage />} />
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/ticket-booked" element={<TicketBookedConfirmation />} />
+                 <Route path="/post-event" element={<PostEventPage />} />
             </Routes>
         </Router>
     );

@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({
   showProfile = false,
   showHome = false,
   profileImage,
-}) => {
+}) => { 
   const navigate = useNavigate();
 
   return (
