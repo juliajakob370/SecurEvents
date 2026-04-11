@@ -163,3 +163,11 @@
         grid-column: auto;
     }
 }
+
+/* Validation error text for payment form */
+.form-error {
+    margin: 6px 0 0;
+    color: #c026d3;
+    font-size: 13px;
+    font-weight: 600;
+}

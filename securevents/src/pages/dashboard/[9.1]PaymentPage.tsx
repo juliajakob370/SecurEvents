@@ -56,16 +56,23 @@ const PaymentPage: React.FC = () => {
     const [verificationCode, setVerificationCode] = useState("");
     const [codeSent, setCodeSent] = useState(false);
 
+    // Validation errors.
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
     // Load saved cards from localStorage.
     useEffect(() => {
         const storedCards = localStorage.getItem("secureEventsCards");
 
         if (storedCards) {
-            const parsedCards: SavedCard[] = JSON.parse(storedCards);
-            setSavedCards(parsedCards);
+            try {
+                const parsedCards: SavedCard[] = JSON.parse(storedCards);
+                setSavedCards(parsedCards);
 
-            if (parsedCards.length > 0) {
-                setSelectedCardId(parsedCards[0].id);
+                if (parsedCards.length > 0) {
+                    setSelectedCardId(parsedCards[0].id);
+                }
+            } catch (error) {
+                console.error("Failed to load saved cards:", error);
             }
         }
     }, []);
@@ -75,27 +82,52 @@ const PaymentPage: React.FC = () => {
         return savedCards.find((card) => card.id === selectedCardId) || null;
     }, [savedCards, selectedCardId]);
 
-    // Save a new card securely for demo purposes.
-    // Note: CVV is never stored.
+    // Validate new card form.
+    const validateNewCard = () => {
+        const newErrors: Record<string, string> = {};
+
+        const trimmedName = cardName.trim();
+        const digitsOnly = cardNumber.replace(/\D/g, "");
+        const trimmedAddress = billingAddress.trim();
+
+        if (!/^[A-Za-z\s'-]{2,50}$/.test(trimmedName)) {
+            newErrors.cardName = "Name must be 2 to 50 letters.";
+        }
+
+        if (!/^\d{16}$/.test(digitsOnly)) {
+            newErrors.cardNumber = "Card number must be exactly 16 digits.";
+        }
+
+        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiryDate)) {
+            newErrors.expiryDate = "Expiry must be in MM/YY format.";
+        }
+
+        if (!/^\d{3,4}$/.test(cvv)) {
+            newErrors.cvv = "CVV must be 3 or 4 digits.";
+        }
+
+        if (!trimmedAddress || trimmedAddress.length > 150) {
+            newErrors.billingAddress = "Billing address is required.";
+        }
+
+        setErrors((prev) => ({ ...prev, ...newErrors }));
+        return Object.keys(newErrors).length === 0;
+    };
+
+    // Save a new card without storing CVV.
     const handleAddNewCard = () => {
-        if (!cardName || !cardNumber || !expiryDate || !billingAddress || !cvv) {
-            alert("Please complete all card fields.");
+        if (!validateNewCard()) {
             return;
         }
 
         const digitsOnly = cardNumber.replace(/\D/g, "");
 
-        if (digitsOnly.length < 12) {
-            alert("Card number looks invalid.");
-            return;
-        }
-
         const newCard: SavedCard = {
             id: Date.now(),
-            cardName,
+            cardName: cardName.trim(),
             cardLast4: digitsOnly.slice(-4),
             expiryDate,
-            billingAddress
+            billingAddress: billingAddress.trim()
         };
 
         const updatedCards = [...savedCards, newCard];
@@ -109,14 +141,26 @@ const PaymentPage: React.FC = () => {
         setCvv("");
         setBillingAddress("");
         setShowNewCardForm(false);
+        setErrors({});
     };
 
-    // Simulate sending phone verification code.
+    // Validate phone before sending code.
     const handleSendCode = () => {
-        if (!phoneNumber) {
-            alert("Please enter your phone number.");
+        const cleanedPhone = phoneNumber.replace(/[^\d]/g, "");
+
+        if (cleanedPhone.length < 10 || cleanedPhone.length > 15) {
+            setErrors((prev) => ({
+                ...prev,
+                phoneNumber: "Enter a valid phone number."
+            }));
             return;
         }
+
+        setErrors((prev) => {
+            const updated = { ...prev };
+            delete updated.phoneNumber;
+            return updated;
+        });
 
         setCodeSent(true);
     };
@@ -125,18 +169,26 @@ const PaymentPage: React.FC = () => {
     const handleConfirmPayment = (e: React.FormEvent) => {
         e.preventDefault();
 
+        const newErrors: Record<string, string> = {};
+
         if (!event) {
             alert("No event selected.");
             return;
         }
 
         if (!selectedCardId) {
-            alert("Please select a payment card.");
-            return;
+            newErrors.selectedCard = "Please select a saved card.";
         }
 
-        if (!codeSent || !verificationCode) {
-            alert("Please complete phone verification.");
+        if (!codeSent) {
+            newErrors.verificationCode = "Please send the verification code first.";
+        } else if (!/^\d{6}$/.test(verificationCode)) {
+            newErrors.verificationCode = "Verification code must be 6 digits.";
+        }
+
+        setErrors((prev) => ({ ...prev, ...newErrors }));
+
+        if (Object.keys(newErrors).length > 0) {
             return;
         }
 
@@ -204,6 +256,7 @@ const PaymentPage: React.FC = () => {
                                             </label>
                                         ))}
                                     </div>
+                                    {errors.selectedCard && <p className="form-error">{errors.selectedCard}</p>}
                                 </div>
                             )}
 
@@ -226,48 +279,60 @@ const PaymentPage: React.FC = () => {
                                             <label>Name on Card</label>
                                             <input
                                                 type="text"
+                                                maxLength={50}
                                                 value={cardName}
                                                 onChange={(e) => setCardName(e.target.value)}
                                             />
+                                            {errors.cardName && <p className="form-error">{errors.cardName}</p>}
                                         </div>
 
                                         <div className="account-field">
                                             <label>Card Number</label>
                                             <input
                                                 type="text"
+                                                inputMode="numeric"
+                                                maxLength={19}
                                                 value={cardNumber}
-                                                onChange={(e) => setCardNumber(e.target.value)}
+                                                onChange={(e) => setCardNumber(e.target.value.replace(/[^\d\s]/g, ""))}
                                                 placeholder="1234 5678 9012 3456"
                                             />
+                                            {errors.cardNumber && <p className="form-error">{errors.cardNumber}</p>}
                                         </div>
 
                                         <div className="account-field">
                                             <label>Expiry Date</label>
                                             <input
                                                 type="text"
+                                                maxLength={5}
                                                 value={expiryDate}
                                                 onChange={(e) => setExpiryDate(e.target.value)}
                                                 placeholder="MM/YY"
                                             />
+                                            {errors.expiryDate && <p className="form-error">{errors.expiryDate}</p>}
                                         </div>
 
                                         <div className="account-field">
                                             <label>CVV</label>
                                             <input
                                                 type="password"
+                                                inputMode="numeric"
+                                                maxLength={4}
                                                 value={cvv}
-                                                onChange={(e) => setCvv(e.target.value)}
+                                                onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
                                                 placeholder="123"
                                             />
+                                            {errors.cvv && <p className="form-error">{errors.cvv}</p>}
                                         </div>
 
                                         <div className="account-field payment-field-full">
                                             <label>Billing Address</label>
                                             <input
                                                 type="text"
+                                                maxLength={150}
                                                 value={billingAddress}
                                                 onChange={(e) => setBillingAddress(e.target.value)}
                                             />
+                                            {errors.billingAddress && <p className="form-error">{errors.billingAddress}</p>}
                                         </div>
                                     </div>
 
@@ -291,11 +356,14 @@ const PaymentPage: React.FC = () => {
                                     <label>Phone Number</label>
                                     <input
                                         type="text"
+                                        inputMode="tel"
+                                        maxLength={20}
                                         value={phoneNumber}
                                         onChange={(e) => setPhoneNumber(e.target.value)}
                                         placeholder="+1 123 456 7890"
                                         required
                                     />
+                                    {errors.phoneNumber && <p className="form-error">{errors.phoneNumber}</p>}
                                 </div>
 
                                 <div className="payment-action-row">
@@ -313,11 +381,14 @@ const PaymentPage: React.FC = () => {
                                         <label>Enter Verification Code</label>
                                         <input
                                             type="text"
+                                            inputMode="numeric"
+                                            maxLength={6}
                                             value={verificationCode}
-                                            onChange={(e) => setVerificationCode(e.target.value)}
-                                            placeholder="Enter code sent to your phone"
+                                            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+                                            placeholder="Enter 6-digit code"
                                             required
                                         />
+                                        {errors.verificationCode && <p className="form-error">{errors.verificationCode}</p>}
                                     </div>
                                 )}
 
