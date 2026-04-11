@@ -14,7 +14,6 @@ const MyEventsPage: React.FC = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      
       {/* HEADER */}
       <Header
         centerType="title"
@@ -25,7 +24,6 @@ const MyEventsPage: React.FC = () => {
 
       <div className="events-container">
         <div className="events-scroll">
-
           {events.length === 0 ? (
             <div className="no-events">
               <p>No Events Posted</p>
@@ -36,10 +34,9 @@ const MyEventsPage: React.FC = () => {
             </div>
           ) : (
             events.map((event, index) => (
-              <MyEventCard key={index} {...event} />
+              <MyEventCard key={index} {...event} index={index} />
             ))
           )}
-
         </div>
       </div>
     </div>

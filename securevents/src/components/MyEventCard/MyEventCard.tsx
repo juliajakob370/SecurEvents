@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./MyEventCard.css";
+import { useContext } from "react";
+import { EventContext } from "../../context/EventContext";
 
 type Props = {
   title: string;
@@ -10,6 +12,7 @@ type Props = {
   image: string;
   dateTime: string;
   status: string;
+  index: number; 
 };
 
 const MyEventCard: React.FC<Props> = ({
@@ -19,20 +22,25 @@ const MyEventCard: React.FC<Props> = ({
   price,
   image,
   dateTime,
-  status
+  status,
+  index
 }) => {
   const navigate = useNavigate();
+  const { removeEvent } = useContext(EventContext);
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this event?\nAll tickets will be refunded."
-    );
+    const isPast = status === "past";
+
+    const confirmMessage = isPast
+      ? "Are you sure you want to delete this event?"
+      : "Refund all tickets and remove this event?";
+
+    const confirmDelete = window.confirm(confirmMessage);
 
     if (confirmDelete) {
-      console.log("Delete event logic here");
-      // call API here later
+      removeEvent(index);
     }
   };
 
@@ -113,8 +121,8 @@ const MyEventCard: React.FC<Props> = ({
           className="btn delete-btn"
           onClick={handleDelete}
         >
-          <i className="bi bi-trash-fill"></i>
-          Delete
+          <i className={`bi ${status === "past" ? "bi-trash-fill" : "bi-cash-coin"}`}></i>
+          {status === "past" ? "Delete" : "Refund"}
         </button>
 
       </div>
