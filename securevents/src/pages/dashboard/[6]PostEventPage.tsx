@@ -23,18 +23,30 @@ const PostEventPage: React.FC = () => {
     const [price, setPrice] = useState("");
     const [isFree, setIsFree] = useState(false);
 
+    // Error state for simple frontend validation.
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
     // Shared context functions and navigation.
     const { addEvent } = useContext(EventContext);
     const navigate = useNavigate();
 
-    // Handle secure image upload validation on frontend.
+    // Handle image upload validation.
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
 
         if (!file) return;
 
-        if (!file.type.startsWith("image/")) {
-            alert("Please upload an image file");
+        const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+        const maxSizeInBytes = 2 * 1024 * 1024;
+
+        if (!allowedTypes.includes(file.type)) {
+            alert("Only JPG, PNG, and WEBP images are allowed.");
+            e.target.value = "";
+            return;
+        }
+
+        if (file.size > maxSizeInBytes) {
+            alert("Image must be smaller than 2MB.");
             e.target.value = "";
             return;
         }
@@ -42,41 +54,92 @@ const PostEventPage: React.FC = () => {
         setImage(URL.createObjectURL(file));
     };
 
-    // Clear price when event is marked as free.
+    // Clear price if event is free.
     useEffect(() => {
         if (isFree) {
             setPrice("");
         }
     }, [isFree]);
 
+    // Validate all fields before posting.
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+
+        const trimmedTitle = title.trim();
+        const trimmedLocation = location.trim();
+        const trimmedDescription = description.trim();
+
+        if (!trimmedTitle) {
+            newErrors.title = "Title is required.";
+        } else if (trimmedTitle.length > 100) {
+            newErrors.title = "Title must be 100 characters or less.";
+        }
+
+        if (!date) {
+            newErrors.date = "Date is required.";
+        }
+
+        if (!time) {
+            newErrors.time = "Time is required.";
+        }
+
+        if (!trimmedLocation) {
+            newErrors.location = "Location is required.";
+        } else if (trimmedLocation.length > 100) {
+            newErrors.location = "Location must be 100 characters or less.";
+        }
+
+        if (trimmedDescription.length > 500) {
+            newErrors.description = "Description must be 500 characters or less.";
+        }
+
+        if (!Number.isInteger(capacity) || capacity < 1 || capacity > 10000) {
+            newErrors.capacity = "Capacity must be between 1 and 10000.";
+        }
+
+        if (!isFree) {
+            const parsedPrice = Number(price);
+
+            if (!price.trim()) {
+                newErrors.price = "Price is required unless event is free.";
+            } else if (Number.isNaN(parsedPrice) || parsedPrice < 0 || parsedPrice > 100000) {
+                newErrors.price = "Price must be a valid amount.";
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     // Handle event submission.
     const handleSubmit = () => {
-        if (!title || !date || !time || !location) {
-            alert("Please fill all required fields");
+        if (!validateForm()) {
             return;
         }
 
+        const trimmedTitle = title.trim();
+        const trimmedLocation = location.trim();
+        const trimmedDescription = description.trim();
+
         const fullDateTime = new Date(`${date}T${time}`);
 
-        // New event object matching EventItem type.
+        // New event object matching shared event type.
         const newEvent = {
-            title,
+            title: trimmedTitle,
             date,
             time,
             organizer: "You",
-            location,
-            price: isFree ? "Free" : price ? `$${price}` : "$0",
+            location: trimmedLocation,
+            price: isFree ? "Free" : `$${Number(price).toFixed(2)}`,
             image: image || defaultImage,
-            description,
+            description: trimmedDescription,
             capacity,
             status: fullDateTime < new Date() ? "past" : "active"
         };
-        // Debug: check what is being sent into context.
-        console.log("NEW EVENT:", newEvent);
 
         addEvent(newEvent);
 
-        // Reset form after posting.
+        // Reset form after successful post.
         setTitle("");
         setDate("");
         setTime("");
@@ -86,6 +149,7 @@ const PostEventPage: React.FC = () => {
         setImage(null);
         setCapacity(50);
         setIsFree(false);
+        setErrors({});
 
         navigate("/main");
     };
@@ -113,7 +177,7 @@ const PostEventPage: React.FC = () => {
                                     Choose Image
                                     <input
                                         type="file"
-                                        accept="image/*"
+                                        accept=".jpg,.jpeg,.png,.webp"
                                         onChange={handleImageUpload}
                                         hidden
                                     />
@@ -127,10 +191,12 @@ const PostEventPage: React.FC = () => {
                                     <input
                                         type="number"
                                         min="1"
+                                        max="10000"
                                         value={capacity}
                                         onChange={(e) => setCapacity(Number(e.target.value))}
                                     />
                                 </div>
+                                {errors.capacity && <p className="form-error">{errors.capacity}</p>}
 
                                 <div className="price-section">
                                     <div className="price-label-row">
@@ -153,6 +219,8 @@ const PostEventPage: React.FC = () => {
                                                 <span>$</span>
                                                 <input
                                                     type="number"
+                                                    min="0"
+                                                    step="0.01"
                                                     placeholder={isFree ? "0.00" : "Enter ticket price"}
                                                     disabled={isFree}
                                                     value={price}
@@ -162,6 +230,7 @@ const PostEventPage: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
+                                {errors.price && <p className="form-error">{errors.price}</p>}
                             </div>
                         </div>
 
@@ -172,11 +241,13 @@ const PostEventPage: React.FC = () => {
                                     <input
                                         type="text"
                                         placeholder=" "
+                                        maxLength={100}
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                     />
                                     <label>Event Title</label>
                                 </div>
+                                {errors.title && <p className="form-error">{errors.title}</p>}
 
                                 <div className="form-group">
                                     <input
@@ -187,6 +258,7 @@ const PostEventPage: React.FC = () => {
                                     />
                                     <label>Date</label>
                                 </div>
+                                {errors.date && <p className="form-error">{errors.date}</p>}
 
                                 <div className="form-group">
                                     <input
@@ -196,11 +268,13 @@ const PostEventPage: React.FC = () => {
                                     />
                                     <label>Time</label>
                                 </div>
+                                {errors.time && <p className="form-error">{errors.time}</p>}
 
                                 <div className="form-group">
                                     <input
                                         type="text"
                                         placeholder=" "
+                                        maxLength={100}
                                         value={location}
                                         onChange={(e) => setLocation(e.target.value)}
                                     />
@@ -208,21 +282,23 @@ const PostEventPage: React.FC = () => {
                                         <i className="bi bi-geo-alt"></i> Location
                                     </label>
                                 </div>
+                                {errors.location && <p className="form-error">{errors.location}</p>}
 
                                 <div className="description-group">
                                     <label>Description</label>
                                     <textarea
                                         placeholder="Tell people about your event..."
+                                        maxLength={500}
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                     />
                                 </div>
+                                {errors.description && <p className="form-error">{errors.description}</p>}
                             </div>
 
                             <button
                                 className="post-event-btn"
                                 onClick={handleSubmit}
-                                disabled={!title || !date || !time || !location}
                             >
                                 Post Event!
                             </button>
