@@ -57,7 +57,8 @@ const PostEventPage: React.FC = () => {
     const trimmedDescription = description.trim();
 
     if (!trimmedTitle) newErrors.title = "Title is required.";
-    else if (trimmedTitle.length > 100) newErrors.title = "Max 100 characters.";
+    else if (trimmedTitle.length > 100)
+      newErrors.title = "Max 100 characters.";
 
     if (!date) newErrors.date = "Date is required.";
     if (!time) newErrors.time = "Time is required.";
@@ -94,9 +95,11 @@ const PostEventPage: React.FC = () => {
       location: location.trim(),
       price: isFree ? "Free" : `$${Number(price).toFixed(2)}`,
       image: image || defaultImage,
-      dateTime: `${date} • ${time}`,
+
       date,
       time,
+      dateTime: `${date} • ${time}`,
+
       description: description.trim(),
       capacity,
       status: fullDateTime < new Date() ? "past" : "active",
@@ -134,6 +137,7 @@ const PostEventPage: React.FC = () => {
       <div className="events-container">
         <div className="events-scroll tickets-scroll">
           <div className="post-event-layout">
+
             {/* LEFT */}
             <div className="post-left-card">
               <div className="image-container">
@@ -154,13 +158,13 @@ const PostEventPage: React.FC = () => {
                 <span className="capacity-label">Capacity</span>
                 <input
                   type="number"
+                  min="1"
+                  max="10000"
                   value={capacity}
                   onChange={(e) => setCapacity(Number(e.target.value))}
                 />
               </div>
-              {errors.capacity && (
-                <p className="form-error">{errors.capacity}</p>
-              )}
+              {errors.capacity && <p className="form-error">{errors.capacity}</p>}
 
               <div className="price-section">
                 <span className="price-label">Price Per Ticket</span>
@@ -179,6 +183,8 @@ const PostEventPage: React.FC = () => {
                     <span>$</span>
                     <input
                       type="number"
+                      min="0"
+                      step="0.01"
                       disabled={isFree}
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
@@ -192,8 +198,12 @@ const PostEventPage: React.FC = () => {
             {/* RIGHT */}
             <div className="post-right ticket-selection-card">
               <div className="post-form-inner">
+
                 <div className="form-group">
                   <input
+                    type="text"
+                    placeholder=" "
+                    maxLength={100}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
@@ -205,6 +215,7 @@ const PostEventPage: React.FC = () => {
                   <input
                     type="date"
                     value={date}
+                    min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setDate(e.target.value)}
                   />
                   <label>Date</label>
@@ -223,25 +234,27 @@ const PostEventPage: React.FC = () => {
 
                 <div className="form-group">
                   <input
+                    type="text"
+                    placeholder=" "
+                    maxLength={100}
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                   />
                   <label>Location</label>
                 </div>
-                {errors.location && (
-                  <p className="form-error">{errors.location}</p>
-                )}
+                {errors.location && <p className="form-error">{errors.location}</p>}
 
                 <div className="description-group">
                   <label>Description</label>
                   <textarea
+                    placeholder="Tell people about your event..."
+                    maxLength={500}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
-                {errors.description && (
-                  <p className="form-error">{errors.description}</p>
-                )}
+                {errors.description && <p className="form-error">{errors.description}</p>}
+
               </div>
 
               <button
@@ -252,6 +265,7 @@ const PostEventPage: React.FC = () => {
                 Post Event!
               </button>
             </div>
+
           </div>
         </div>
       </div>
