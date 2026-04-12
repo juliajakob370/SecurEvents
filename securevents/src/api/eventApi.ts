@@ -77,3 +77,45 @@ export async function deleteEvent(eventId: string) {
 
     return await response.json();
 }
+
+// Get current user's own events.
+export async function getMyEvents(): Promise<EventItem[]> {
+    const response = await fetch(`${BASE_URL}/my`, {
+        method: "GET",
+        credentials: "include"
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to load my events");
+    }
+
+    return await response.json();
+}
+
+// Get one event's guests.
+export async function getEventGuests(eventId: string) {
+    const response = await fetch(`${BASE_URL}/${eventId}/guests`, {
+        method: "GET",
+        credentials: "include"
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to load guest list");
+    }
+
+    return await response.json();
+}
+
+// Refund or close event tickets.
+export async function refundEvent(eventId: string) {
+    const response = await fetch(`${BASE_URL}/${eventId}/refund`, {
+        method: "POST",
+        credentials: "include"
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to refund event");
+    }
+
+    return await response.json();
+}

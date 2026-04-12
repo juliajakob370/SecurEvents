@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import "../../styles/MainPage.css";
 import "../../styles/[9.1]PaymentPage.css";
+import { getPaymentMethods, createPaymentMethod } from "../../api/accountApi";
+import { createBooking } from "../../api/bookingApi";
 
 // Type for selected event.
 type SelectedEvent = {
@@ -21,7 +23,7 @@ type SelectedEvent = {
 
 // Type for locally saved card.
 type SavedCard = {
-    id: number;
+    id: string | number;
     cardName: string;
     cardLast4: string;
     expiryDate: string;
@@ -41,7 +43,7 @@ const PaymentPage: React.FC = () => {
 
     // Saved cards state.
     const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
-    const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+    const [selectedCardId, setSelectedCardId] = useState<string | number | null>(null);
 
     // New card form state.
     const [showNewCardForm, setShowNewCardForm] = useState(false);
@@ -59,23 +61,23 @@ const PaymentPage: React.FC = () => {
     // Validation errors.
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Load saved cards from localStorage.
-    useEffect(() => {
-        const storedCards = localStorage.getItem("secureEventsCards");
+// Load saved cards from backend.
+useEffect(() => {
+    async function loadCards() {
+        try {
+            const cards = await getPaymentMethods();
+            setSavedCards(cards);
 
-        if (storedCards) {
-            try {
-                const parsedCards: SavedCard[] = JSON.parse(storedCards);
-                setSavedCards(parsedCards);
-
-                if (parsedCards.length > 0) {
-                    setSelectedCardId(parsedCards[0].id);
-                }
-            } catch (error) {
-                console.error("Failed to load saved cards:", error);
+            if (cards.length > 0) {
+                setSelectedCardId(cards[0].id);
             }
+        } catch (error) {
+            console.error("Failed to load saved cards:", error);
         }
-    }, []);
+    }
+
+    loadCards();
+}, []);
 
     // Selected card details.
     const selectedCard = useMemo(() => {
@@ -114,36 +116,36 @@ const PaymentPage: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // Save a new card without storing CVV.
-    const handleAddNewCard = () => {
+    // Save a new card without storing CVV on frontend.
+    const handleAddNewCard = async () => {
         if (!validateNewCard()) {
             return;
         }
 
-        const digitsOnly = cardNumber.replace(/\D/g, "");
+        try {
+            const newCard = await createPaymentMethod({
+                cardName: cardName.trim(),
+                cardNumber: cardNumber.replace(/\D/g, ""),
+                expiryDate,
+                billingAddress: billingAddress.trim()
+            });
 
-        const newCard: SavedCard = {
-            id: Date.now(),
-            cardName: cardName.trim(),
-            cardLast4: digitsOnly.slice(-4),
-            expiryDate,
-            billingAddress: billingAddress.trim()
-        };
+            const updatedCards = [...savedCards, newCard];
+            setSavedCards(updatedCards);
+            setSelectedCardId(newCard.id);
 
-        const updatedCards = [...savedCards, newCard];
-        setSavedCards(updatedCards);
-        localStorage.setItem("secureEventsCards", JSON.stringify(updatedCards));
-        setSelectedCardId(newCard.id);
-
-        setCardName("");
-        setCardNumber("");
-        setExpiryDate("");
-        setCvv("");
-        setBillingAddress("");
-        setShowNewCardForm(false);
-        setErrors({});
+            setCardName("");
+            setCardNumber("");
+            setExpiryDate("");
+            setCvv("");
+            setBillingAddress("");
+            setShowNewCardForm(false);
+            setErrors({});
+        } catch (error) {
+            console.error("Failed to save card:", error);
+            alert("Could not save payment method.");
+        }
     };
-
     // Validate phone before sending code.
     const handleSendCode = () => {
         const cleanedPhone = phoneNumber.replace(/[^\d]/g, "");
@@ -166,7 +168,7 @@ const PaymentPage: React.FC = () => {
     };
 
     // Final secure payment confirmation.
-    const handleConfirmPayment = (e: React.FormEvent) => {
+    const handleConfirmPayment = async (e: React.FormEvent) => {
         e.preventDefault();
 
         const newErrors: Record<string, string> = {};
@@ -192,14 +194,26 @@ const PaymentPage: React.FC = () => {
             return;
         }
 
-        navigate("/ticket-booked", {
-            state: {
-                event,
+        try {
+            const bookingResponse = await createBooking({
+                eventId: (event as any).id || event.title,
                 quantity,
-                total,
-                selectedCard
-            }
-        });
+                paymentMethodId: selectedCardId as string | number,
+                verificationCode
+            });
+
+            navigate("/ticket-booked", {
+                state: {
+                    event,
+                    quantity,
+                    total,
+                    booking: bookingResponse
+                }
+            });
+        } catch (error) {
+            console.error("Failed to complete payment:", error);
+            alert("Could not complete payment.");
+        }
     };
 
     return (

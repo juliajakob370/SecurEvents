@@ -39,28 +39,28 @@ const TicketBookedConfirmation: React.FC = () => {
   const quantity = location.state?.quantity || 1;
   const total = location.state?.total || 0;
 
-  // Save confirmed booking to localStorage.
-  useEffect(() => {
-    if (!event) return;
+  //// Save confirmed booking to localStorage.
+  //useEffect(() => {
+  //  if (!event) return;
 
-    const existingTickets = localStorage.getItem("secureEventsTickets");
-    const parsedTickets: TicketRecord[] = existingTickets
-      ? JSON.parse(existingTickets)
-      : [];
+  //  const existingTickets = localStorage.getItem("secureEventsTickets");
+  //  const parsedTickets: TicketRecord[] = existingTickets
+  //    ? JSON.parse(existingTickets)
+  //    : [];
 
-    const newTicket: TicketRecord = {
-      id: Date.now(),
-      event,
-      quantity,
-      total,
-      bookedAt: new Date().toISOString(),
-    };
+  //  const newTicket: TicketRecord = {
+  //    id: Date.now(),
+  //    event,
+  //    quantity,
+  //    total,
+  //    bookedAt: new Date().toISOString(),
+  //  };
 
-    localStorage.setItem(
-      "secureEventsTickets",
-      JSON.stringify([...parsedTickets, newTicket]),
-    );
-  }, [event, quantity, total]);
+  //  localStorage.setItem(
+  //    "secureEventsTickets",
+  //    JSON.stringify([...parsedTickets, newTicket]),
+  //  );
+  //}, [event, quantity, total]);
 
   return (
     <div style={{ padding: "20px" }}>
@@ -103,10 +103,10 @@ const TicketBookedConfirmation: React.FC = () => {
 
             <div className="confirmation-actions">
               <button
-                onClick={() => navigate("/main")}
+                onClick={() => navigate("/tickets")}
                 className="confirmation-btn"
               >
-                Back to Dashboard
+                View My Tickets
               </button>
 
               <button

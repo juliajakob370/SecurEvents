@@ -3,6 +3,13 @@ import React, { useEffect, useState } from "react";
 import Header from "../../components/Header/Header";
 import "../../styles/MainPage.css";
 import "../../styles/[4]AccountPage.css";
+import {
+    getProfile,
+    updateProfile,
+    getPaymentMethods,
+    createPaymentMethod
+} from "../../api/accountApi";
+
 
 import profile0 from "../../assets/profilePics/profile0.png";
 import profile1 from "../../assets/profilePics/profile1.png";
@@ -15,7 +22,7 @@ import profile7 from "../../assets/profilePics/profile7.png";
 
 // Card type for saved payment methods.
 type SavedCard = {
-    id: number;
+    id: string | number;
     cardName: string;
     cardLast4: string;
     expiryDate: string;
@@ -55,14 +62,27 @@ const AccountPage: React.FC = () => {
     // Validation errors.
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Load saved cards on page open.
+    // Load profile and cards on page open.
     useEffect(() => {
-        const storedCards = localStorage.getItem("secureEventsCards");
-        if (storedCards) {
-            setSavedCards(JSON.parse(storedCards));
-        }
-    }, []);
+        async function loadAccountData() {
+            try {
+                const profile = await getProfile();
+                setFullName(profile.fullName || "Current Name");
+                setEmail(profile.email || "current@email.com");
+            } catch (error) {
+                console.error("Failed to load profile:", error);
+            }
 
+            try {
+                const cards = await getPaymentMethods();
+                setSavedCards(cards);
+            } catch (error) {
+                console.error("Failed to load payment methods:", error);
+            }
+        }
+
+        loadAccountData();
+    }, []);
     // Validate add card form.
     const validateCardForm = () => {
         const newErrors: Record<string, string> = {};
@@ -95,32 +115,47 @@ const AccountPage: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // Save a new card to localStorage.
-    const handleAddCard = () => {
+    // Save a new card to backend.
+    const handleAddCard = async () => {
         if (!validateCardForm()) return;
 
-        const digitsOnly = cardNumber.replace(/\D/g, "");
+        try {
+            const savedCard = await createPaymentMethod({
+                cardName: cardName.trim(),
+                cardNumber: cardNumber.replace(/\D/g, ""),
+                expiryDate,
+                billingAddress: billingAddress.trim()
+            });
 
-        const newCard: SavedCard = {
-            id: Date.now(),
-            cardName: cardName.trim(),
-            cardLast4: digitsOnly.slice(-4),
-            expiryDate,
-            billingAddress: billingAddress.trim()
-        };
+            setSavedCards((prev) => [...prev, savedCard]);
 
-        const updatedCards = [...savedCards, newCard];
-        setSavedCards(updatedCards);
-        localStorage.setItem("secureEventsCards", JSON.stringify(updatedCards));
-
-        setCardName("");
-        setCardNumber("");
-        setExpiryDate("");
-        setCvv("");
-        setBillingAddress("");
-        setErrors({});
+            setCardName("");
+            setCardNumber("");
+            setExpiryDate("");
+            setCvv("");
+            setBillingAddress("");
+            setErrors({});
+        } catch (error) {
+            console.error("Failed to save card:", error);
+            alert("Could not save payment method.");
+        }
     };
 
+    // Save profile changes to backend.
+    const handleSaveProfile = async () => {
+        try {
+            await updateProfile({
+                fullName,
+                email,
+                profileImage: selectedProfile
+            });
+
+            alert("Profile updated successfully.");
+        } catch (error) {
+            console.error("Failed to update profile:", error);
+            alert("Could not update profile.");
+        }
+    };
     return (
         <div style={{ padding: "20px" }}>
             {/* Header */}
@@ -259,6 +294,11 @@ const AccountPage: React.FC = () => {
                                         Add Card
                                     </button>
                                 </div>
+                            </div>
+                            <div className="account-actions-row">
+                                <button className="save-account-btn" onClick={handleSaveProfile}>
+                                    Save Profile
+                                </button>
                             </div>
 
                             {/* Saved cards section */}

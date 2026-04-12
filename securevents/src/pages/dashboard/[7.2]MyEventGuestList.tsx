@@ -1,23 +1,30 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../../components/Header/Header";
 import GuestCard from "../../components/GuestCard/GuestCard";
 import "../../styles/SecurEventsStyle.css";
 import "../../styles/GuestListPage.css";
+import { useLocation } from "react-router-dom";
+import { getEventGuests } from "../../api/eventApi";
 
 const GuestListPage: React.FC = () => {
 
-  // TEMP DATA (later comes from backend / context)
-  const event = {
-    title: "Summer Music Festival",
-    price: 25,
-    capacity: 100
-  };
+    const location = useLocation();
+    const [guests, setGuests] = useState<any[]>([]);
+    const [event, setEvent] = useState<any>(location.state?.event || null);
 
-const guests = [
-  { name: "Julia Jakob", email: "julia@email.com", dateTime: "Aug 12 • 7:00 PM" },
-  { name: "Bibi Murwared", email: "bibi@email.com", dateTime: "Aug 12 • 7:00 PM" },
-  { name: "Alex Chen", email: "alex@email.com", dateTime: "Aug 12 • 7:00 PM" }
-];
+    useEffect(() => {
+        async function loadGuests() {
+            try {
+                if (!event) return;
+                const data = await getEventGuests(event.id || event.title);
+                setGuests(data.guests || data);
+            } catch (error) {
+                console.error("Failed to load guests:", error);
+            }
+        }
+
+        loadGuests();
+    }, [event]);
 
   //  calculate values
   const totalGuests = guests.length;

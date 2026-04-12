@@ -5,6 +5,7 @@ import { EventContext } from "../../context/EventContext";
 import Header from "../../components/Header/Header";
 import "../../styles/MainPage.css";
 import "../../styles/PostEventPage.css";
+import { updateEvent as updateEventApi } from "../../api/eventApi";
 
 // Edit Event page component.
 const EditMyEventDetails: React.FC = () => {
@@ -29,8 +30,8 @@ const EditMyEventDetails: React.FC = () => {
     const [status, setStatus] = useState(event?.status || "active");
     const [isFree, setIsFree] = useState(event?.price === "Free");
 
-    // Save edited event.
-    const handleSave = () => {
+    // Save edited event to backend and frontend.
+    const handleSave = async () => {
         if (!title || !date || !time || !location) {
             alert("Please fill all required fields");
             return;
@@ -49,10 +50,15 @@ const EditMyEventDetails: React.FC = () => {
             status
         };
 
-        removeEvent(event.index);
-        addEvent(updatedEvent);
-
-        navigate("/main");
+        try {
+            const savedEvent = await updateEventApi(event.id || event.title, updatedEvent);
+            removeEvent(event.index);
+            addEvent(savedEvent);
+            navigate("/main");
+        } catch (error) {
+            console.error("Failed to update event:", error);
+            alert("Could not update event.");
+        }
     };
 
     return (

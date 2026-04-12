@@ -3,6 +3,7 @@ import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MyEventCard.css";
 import { EventContext } from "../../context/EventContext";
+import { deleteEvent, refundEvent } from "../../api/eventApi";
 
 // Props for each event card in My Events page.
 type Props = {
@@ -37,7 +38,7 @@ const MyEventCard: React.FC<Props> = ({
     const { removeEvent } = useContext(EventContext);
 
     // Delete or refund action.
-    const handleDelete = (e: React.MouseEvent) => {
+    const handleDelete = async (e: React.MouseEvent) => {
         e.stopPropagation();
 
         const isPast = status === "past";
@@ -48,8 +49,19 @@ const MyEventCard: React.FC<Props> = ({
 
         const confirmDelete = window.confirm(confirmMessage);
 
-        if (confirmDelete) {
+        if (!confirmDelete) return;
+
+        try {
+            if (isPast) {
+                await deleteEvent((index as unknown as string) || title);
+            } else {
+                await refundEvent((index as unknown as string) || title);
+            }
+
             removeEvent(index);
+        } catch (error) {
+            console.error("Failed to process event action:", error);
+            alert("Could not complete this action.");
         }
     };
 
