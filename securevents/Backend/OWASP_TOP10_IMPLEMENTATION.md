@@ -1,0 +1,201 @@
+# OWASP Top 10 (2021) – SecureEvents Implementation Summary
+
+This document maps the current SecureEvents backend/frontend hardening work to OWASP Top 10 categories and records what was implemented.
+
+## A01: Broken Access Control
+
+### Implemented
+- JWT-based auth across protected endpoints.
+- Named authorization policies:
+  - `AdminOnly`
+  - `OwnerOrAdmin`
+- Owner checks for event operations (edit/cancel/refund/guest visibility).
+- Admin-only endpoints for:
+  - user management (list/suspend/unsuspend/soft-delete)
+  - event moderation (pending/approve/reject/all)
+  - booking visibility/control (`/api/bookings/admin/all`)
+- Gateway-only middleware (`X-Gateway-Key`) to block direct service access.
+- Suspended/deleted users blocked from auth/session operations.
+
+### Key files
+- `UserManagementService/Program.cs`
+- `EventManagementService/Program.cs`
+- `UserManagementService/Controllers/UsersController.cs`
+- `EventManagementService/Controllers/EventsController.cs`
+- `EventManagementService/Controllers/BookingsController.cs`
+- `*/Middleware/GatewayOnlyMiddleware.cs`
+
+---
+
+## A02: Cryptographic Failures
+
+### Implemented
+- JWT signed with symmetric key and strict token validation.
+- Refresh token generation using cryptographically secure random bytes.
+- Hashing for log-chain integrity via SHA-256.
+- Outbound logging transport hardened to require HTTPS outside development.
+
+### Notes
+- Secrets are still in `appsettings.json` in current workspace and should be moved to environment/user secrets/secret manager for production.
+
+### Key files
+- `UserManagementService/Controllers/UsersController.cs`
+- `UserManagementService/Program.cs`
+- `UserManagementService/Services/LoggingClient.cs`
+- `EventManagementService/Services/LoggingClient.cs`
+- `LoggingService/Controllers/LogsController.cs`
+
+---
+
+## A03: Injection
+
+### Implemented
+- EF Core LINQ/ORM usage in place of raw SQL for business operations.
+- Input constraints and server-side checks before persistence.
+- Model validation checks (`ModelState`) added on key endpoints.
+
+### Key files
+- `EventManagementService/Controllers/*`
+- `UserManagementService/Controllers/UsersController.cs`
+- `EventManagementService/Models/*`
+- `UserManagementService/Models/UserRequests.cs`
+- `LoggingService/Models/LogRequest.cs`
+
+---
+
+## A04: Insecure Design
+
+### Implemented
+- OTP/verification workflows include:
+  - request throttling
+  - verification attempt counters
+  - lockout/cooldown after repeated failures.
+- Gateway global rate limiting to reduce automated abuse.
+
+### Key files
+- `UserManagementService/Controllers/UsersController.cs`
+- `UserManagementService/Program.cs`
+- `ApiGateway/Program.cs`
+
+---
+
+## A05: Security Misconfiguration
+
+### Implemented
+- Centralized exception middleware and consistent error responses.
+- Gateway security headers:
+  - `X-Content-Type-Options`
+  - `X-Frame-Options`
+  - `Content-Security-Policy`
+  - `Referrer-Policy`
+  - `HSTS` (HTTPS requests)
+- Validation annotations on DTOs and model-state checks.
+- Migrations-on-startup for schema consistency.
+
+### Key files
+- `ApiGateway/Program.cs`
+- `*/Middleware/GlobalExceptionMiddleware.cs`
+- `*/Program.cs`
+- `*/Models/*Requests*.cs`
+
+---
+
+## A06: Vulnerable and Outdated Components
+
+### Implemented
+- Dependency use is centralized in project files and restored through standard package management.
+
+### Recommended next
+- Add CI vulnerability scanning gates (`dotnet list package --vulnerable`, `npm audit`).
+
+---
+
+## A07: Identification and Authentication Failures
+
+### Implemented
+- Login/signup/email-change/payment OTP verification flows.
+- Refresh token rotation + revocation.
+- Logout revokes active refresh tokens.
+- Suspended/deleted users cannot authenticate.
+- Rate limits + lockout for code-verify abuse scenarios.
+
+### Key files
+- `UserManagementService/Controllers/UsersController.cs`
+- `UserManagementService/Models/RefreshToken.cs`
+- `UserManagementService/Models/VerificationAttempt.cs`
+
+---
+
+## A08: Software and Data Integrity Failures
+
+### Implemented
+- EF migrations enforce schema-controlled evolution.
+- Gateway-based service boundary reduces direct tampering surface.
+- Log hash-chain adds tamper evidence for audit entries.
+
+### Recommended next
+- Add signed build/release provenance and dependency lock verification in CI.
+
+---
+
+## A09: Security Logging and Monitoring Failures
+
+### Implemented
+- Structured security request logging middleware in all services.
+- Centralized logging service endpoint for security/business events.
+- Audit log hash-chain (`PreviousHash` -> `EntryHash`) for tamper-evidence.
+- Soft-delete policy fields (`IsDeleted`, `DeletedAt`) to preserve records/history.
+
+### Key files
+- `*/Middleware/SecurityRequestLoggingMiddleware.cs`
+- `LoggingService/Controllers/LogsController.cs`
+- `LoggingService/Models/AuditLog.cs`
+- `User.cs`, `EventItem.cs`, `BookingRecord.cs`
+
+---
+
+## A10: Server-Side Request Forgery (SSRF)
+
+### Implemented
+- Outbound logging clients validate destination URL:
+  - absolute URI only
+  - scheme restrictions
+  - no userinfo
+  - host allowlist (`Security:AllowedOutboundHosts`)
+  - private/unsafe IP checks for IP-literal targets.
+
+### Key files
+- `UserManagementService/Services/LoggingClient.cs`
+- `EventManagementService/Services/LoggingClient.cs`
+- `UserManagementService/appsettings.json`
+- `EventManagementService/appsettings.json`
+
+---
+
+## Soft-Delete Policy Implemented
+
+Soft-delete metadata added and applied to avoid hard-deletion in key domains:
+- `Users`: `IsDeleted`, `DeletedAt`
+- `Events`: `IsDeleted`, `DeletedAt`
+- `BookingRecords`: `IsDeleted`, `DeletedAt`
+- `AuditLogs`: `IsDeleted`, `DeletedAt`
+
+Deletion-like operations now preserve records and update state.
+
+---
+
+## Admin Panel / Moderation Security
+
+- Event lifecycle: `pending` -> admin `approve/reject`.
+- Admin can manage users, events, bookings from dedicated admin dashboard.
+- Route protection in frontend via `RequireAdmin`.
+- Backend admin endpoints protected by `AdminOnly` policy.
+
+---
+
+## Current Residual Risk / Next Hardening
+
+1. Move `Jwt:Secret` and gateway key out of appsettings to secure secret stores.
+2. Add audit-chain verification endpoint for periodic integrity checks.
+3. Add CI security gates for package vulnerabilities and dependency integrity.
+4. Enforce HTTPS-only in all non-dev service-to-service and client traffic.

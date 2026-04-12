@@ -1,0 +1,52 @@
+.receipt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 20, 88, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.receipt-modal {
+  width: min(92vw, 520px);
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 12px 30px rgba(42, 20, 88, 0.25);
+  border: 1px solid rgba(192, 132, 252, 0.25);
+}
+
+.receipt-title {
+  margin: 0 0 14px;
+  color: #2a1458;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 8px 0;
+  color: #4b3f63;
+}
+
+.receipt-label {
+  font-weight: 700;
+  color: #6b21a8;
+}
+
+.receipt-footer {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.receipt-close-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, #8b5cf6, #c084fc);
+  color: white;
+}

@@ -1,0 +1,87 @@
+using EventManagementService.Data;
+using EventManagementService.Middleware;
+using EventManagementService.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient<LoggingClient>();
+
+builder.Services.AddDbContext<EventDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("HomeInventoryConnection")));
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
+var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT secret is missing.");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    // OWASP A01 FIXED: Named policies reduce ad-hoc role checks and inconsistent authorization.
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("OwnerOrAdmin", policy =>
+        policy.RequireAssertion(ctx => ctx.User.Identity?.IsAuthenticated == true));
+});
+
+var app = builder.Build();
+
+// A09 FIXED: Centralized exception handling for consistent error responses.
+app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseMiddleware<SecurityRequestLoggingMiddleware>();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<EventDbContext>();
+    // OWASP A05/A06 hardening support:
+    // Running migrations at startup guarantees expected schema constraints are present
+    // (ownership fields, payment precision, and table integrity) across environments.
+    // A03 FIXED: Schema is applied through EF Core migrations, not raw SQL text.
+    db.Database.Migrate();
+}
+
+app.UseCors("Frontend");
+app.UseMiddleware<GatewayOnlyMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "event-management" }));
+app.MapControllers();
+app.Run();

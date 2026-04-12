@@ -1,0 +1,157 @@
+// Imports: React state, routing tools, shared styles, and logo.
+import React, { useContext, useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import "../../styles/SecurEventsStyle.css";
+import "../../styles/Login&SignUp.css";
+import logo from "../../assets/SecureEventLogo.png";
+import { requestSignupCode, verifySignupCode } from "../../api/authApi";
+import { AuthContext } from "../../context/AuthContext";
+
+// Signup code page component.
+const SignupCodePage: React.FC = () => {
+    // Form state.
+    const [formData, setFormData] = useState({ code: "" });
+    const [loading, setLoading] = useState(false);
+
+    // Validation error state.
+    const [error, setError] = useState("");
+
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const firstName = location.state?.firstName || "";
+    const email = location.state?.email || "";
+    const { refreshUser } = useContext(AuthContext);
+
+    useEffect(() => {
+        if (!email) {
+            navigate("/signup", { replace: true });
+        }
+    }, [email, navigate]);
+
+    // Update code input.
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value.replace(/\D/g, "")
+        });
+        setError("");
+    };
+
+    // Validate code format.
+    const validateForm = () => {
+        if (!/^\d{6}$/.test(formData.code)) {
+            setError("Code must be exactly 6 digits.");
+            return false;
+        }
+
+        return true;
+    };
+
+    // Submit verification code.
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!validateForm()) return;
+
+        setLoading(true);
+
+        try {
+            await verifySignupCode(email, formData.code);
+            await refreshUser();
+            navigate("/main");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Invalid code.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResend = async () => {
+        try {
+            const state = location.state;
+            await requestSignupCode(state?.firstName || "", state?.lastName || "", email);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to resend code.");
+        }
+    };
+
+    return (
+        <div className="global-page">
+            <div className="global-container auth-container">
+                <header className="global-header"></header>
+
+                <div
+                    className="global-content auth-form"
+                    style={{ gridTemplateColumns: "1fr" }}
+                >
+                    <div className="global-content-box">
+                        <div className="login-signup-white-form-card">
+                            <div className="login-signup-logo-wrapper">
+                                <img src={logo} alt="SecureEvents" className="global-logo" />
+                            </div>
+
+                            <h2 className="login-title">
+                                Welcome {firstName}, check your email!
+                            </h2>
+
+                            <p className="code-sent-text">Verification code sent to</p>
+                            <p className="email-text">
+                                <span>{email}</span>
+                            </p>
+
+                            <form onSubmit={handleSubmit} className="login-form">
+                                <div className="form-group">
+                                    <input
+                                        id="signup-code"
+                                        type="text"
+                                        name="code"
+                                        value={formData.code}
+                                        onChange={handleChange}
+                                        placeholder=" "
+                                        inputMode="numeric"
+                                        maxLength={6}
+                                        required
+                                    />
+                                    <label htmlFor="signup-code">Enter Code</label>
+                                </div>
+
+                                {error && <p className="form-error">{error}</p>}
+
+                                <div className="button-row">
+                                    <button
+                                        type="button"
+                                        className="resend-code-btn"
+                                        onClick={handleResend}
+                                    >
+                                        Resend Code
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="submit-code-btn"
+                                    >
+                                        {loading ? "Verifying..." : "Submit"}
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div className="back-button-container">
+                                <button
+                                    type="button"
+                                    className="back-btn"
+                                    onClick={() => navigate("/signup")}
+                                >
+                                    ← Back
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default SignupCodePage;

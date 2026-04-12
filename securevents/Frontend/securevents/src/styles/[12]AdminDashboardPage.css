@@ -1,0 +1,101 @@
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.admin-stat {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(42, 20, 88, 0.1);
+  border: 1px solid rgba(192, 132, 252, 0.2);
+}
+
+.admin-stat-title {
+  color: #7c3aed;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.admin-stat-value {
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #2a1458;
+}
+
+.admin-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-toolbar input {
+  flex: 1;
+  border: 1px solid #ddd6fe;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.admin-section {
+  margin-bottom: 18px;
+}
+
+.admin-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px dashed #ede9fe;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.admin-btn.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-btn.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.admin-pill.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.admin-pill.cancelled,
+.admin-pill.refunded,
+.admin-pill.suspended {
+  background: #fee2e2;
+  color: #b91c1c;
+}
