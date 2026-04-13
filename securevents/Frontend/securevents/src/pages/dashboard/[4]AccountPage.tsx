@@ -42,6 +42,7 @@ const AccountPage: React.FC = () => {
     const [selectedProfileIndex, setSelectedProfileIndex] = useState(0);
     const [showPopup, setShowPopup] = useState(false);
     const [profileMessage, setProfileMessage] = useState("");
+    const [cardMessage, setCardMessage] = useState("");
     const [oldEmailCode, setOldEmailCode] = useState("");
     const [newEmailCode, setNewEmailCode] = useState("");
     const [emailChangePending, setEmailChangePending] = useState(false);
@@ -211,7 +212,7 @@ const AccountPage: React.FC = () => {
     const handleAddCard = async () => {
         if (!validateCardForm()) return;
         if (!user?.id) {
-            setProfileMessage("Please wait for account data to load before saving a card.");
+            setCardMessage("Please wait for account data to load before saving a card.");
             return;
         }
 
@@ -231,8 +232,9 @@ const AccountPage: React.FC = () => {
             setCvv("");
             setBillingAddress("");
             setErrors({});
+            setCardMessage("Card saved successfully.");
         } catch (err) {
-            setProfileMessage(err instanceof Error ? err.message : "Failed to save card.");
+            setCardMessage(err instanceof Error ? err.message : "Failed to save card.");
         }
     };
 
@@ -241,8 +243,9 @@ const AccountPage: React.FC = () => {
         try {
             await removeSavedCard(cardId);
             setSavedCards((prev) => prev.filter((c) => c.id !== cardId));
+            setCardMessage("Card removed.");
         } catch (err) {
-            setProfileMessage(err instanceof Error ? err.message : "Failed to remove card.");
+            setCardMessage(err instanceof Error ? err.message : "Failed to remove card.");
         }
     };
 
@@ -448,6 +451,12 @@ const AccountPage: React.FC = () => {
                                         Add Card
                                     </button>
                                 </div>
+
+                                {cardMessage && (
+                                    <p className={cardMessage.toLowerCase().includes("saved") || cardMessage.toLowerCase().includes("removed") ? "form-success" : "form-error"}>
+                                        {cardMessage}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Saved cards section */}

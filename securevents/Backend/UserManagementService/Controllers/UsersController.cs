@@ -694,11 +694,6 @@ public class UsersController : ControllerBase
 
         var cardLast4 = digitsOnly.Substring(digitsOnly.Length - 4, 4);
 
-        if (!PassesLuhnCheck(digitsOnly))
-        {
-            return BadRequest(new { message = "Card number is invalid." });
-        }
-
         if (!IsExpiryDateValid(normalizedExpiryDate, out var expiryEndUtc))
         {
             return BadRequest(new { message = "Expiry date must be in MM/YY format." });
@@ -801,35 +796,6 @@ public class UsersController : ControllerBase
         var year = 2000 + shortYear;
         expiryEndUtc = new DateTime(year, month, DateTime.DaysInMonth(year, month), 23, 59, 59, DateTimeKind.Utc);
         return true;
-    }
-
-    private static bool PassesLuhnCheck(string digits)
-    {
-        var sum = 0;
-        var shouldDouble = false;
-
-        for (var i = digits.Length - 1; i >= 0; i--)
-        {
-            var digit = digits[i] - '0';
-            if (digit < 0 || digit > 9)
-            {
-                return false;
-            }
-
-            if (shouldDouble)
-            {
-                digit *= 2;
-                if (digit > 9)
-                {
-                    digit -= 9;
-                }
-            }
-
-            sum += digit;
-            shouldDouble = !shouldDouble;
-        }
-
-        return sum % 10 == 0;
     }
 
     private async Task<string> IssueRefreshTokenAsync(int userId)

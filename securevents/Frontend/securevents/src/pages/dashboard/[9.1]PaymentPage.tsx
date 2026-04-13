@@ -57,6 +57,7 @@ const PaymentPage: React.FC = () => {
     const [codeSent, setCodeSent] = useState(false);
     const [codeVerified, setCodeVerified] = useState(false);
     const [verificationMessage, setVerificationMessage] = useState("");
+    const [cardMessage, setCardMessage] = useState("");
 
     // Validation errors.
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -145,7 +146,7 @@ const PaymentPage: React.FC = () => {
         }
 
         if (!user?.id) {
-            setVerificationMessage("Please wait for account data to load before saving a card.");
+            setCardMessage("Please wait for account data to load before saving a card.");
             return;
         }
 
@@ -168,8 +169,9 @@ const PaymentPage: React.FC = () => {
             setBillingAddress("");
             setShowNewCardForm(false);
             setErrors({});
+            setCardMessage("Card saved successfully.");
         } catch (err) {
-            setVerificationMessage(err instanceof Error ? err.message : "Failed to save card.");
+            setCardMessage(err instanceof Error ? err.message : "Failed to save card.");
         }
     };
 
@@ -497,6 +499,12 @@ const PaymentPage: React.FC = () => {
                                             Save Card
                                         </button>
                                     </div>
+
+                                    {cardMessage && (
+                                        <p className={cardMessage.toLowerCase().includes("saved") ? "form-success" : "form-error"}>
+                                            {cardMessage}
+                                        </p>
+                                    )}
                                 </div>
                             )}
 
