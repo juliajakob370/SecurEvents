@@ -7,6 +7,7 @@ import Header from "../../components/Header/Header";
 import "../../styles/MainPage.css";
 import "../../styles/PostEventPage.css";
 import { uploadEventImage } from "../../api/eventApi";
+import defaultImage from "../../assets/default-image.png";
 
 // Edit Event page component.
 const EditMyEventDetails: React.FC = () => {
@@ -33,10 +34,12 @@ const EditMyEventDetails: React.FC = () => {
     const [uploadingImage, setUploadingImage] = useState(false);
     const [status] = useState(event?.status || "active");
     const [error, setError] = useState("");
+    const [saving, setSaving] = useState(false);
     const [isFree, setIsFree] = useState(event?.price === "Free");
 
     // Save edited event.
     const handleSave = async () => {
+        if (saving) return;
         setError("");
 
         if (uploadingImage) {
@@ -44,9 +47,36 @@ const EditMyEventDetails: React.FC = () => {
             return;
         }
 
-        if (!title || !date || !time || !location) {
-            setError("Please fill all required fields");
+        const trimmedTitle = title.trim();
+        const trimmedLocation = location.trim();
+        const trimmedDescription = description.trim();
+
+        if (!trimmedTitle || !date || !time || !trimmedLocation) {
+            setError("Please fill all required fields.");
             return;
+        }
+        if (trimmedTitle.length > 100) {
+            setError("Title must be 100 characters or less.");
+            return;
+        }
+        if (trimmedLocation.length > 100) {
+            setError("Location must be 100 characters or less.");
+            return;
+        }
+        if (trimmedDescription.length > 500) {
+            setError("Description must be 500 characters or less.");
+            return;
+        }
+        if (!Number.isInteger(capacity) || capacity < 1 || capacity > 10000) {
+            setError("Capacity must be between 1 and 10000.");
+            return;
+        }
+        if (!isFree) {
+            const parsedPrice = Number(price);
+            if (!price.trim() || isNaN(parsedPrice) || parsedPrice < 0 || parsedPrice > 100000) {
+                setError("Price must be between 0 and 100000, or mark the event as Free.");
+                return;
+            }
         }
 
         if (!event?.id) {
@@ -54,28 +84,36 @@ const EditMyEventDetails: React.FC = () => {
             return;
         }
 
+        // An unchecked "Free" box with a 0 price means the user actually intends a free event;
+        // normalize to "Free" to avoid saving the inconsistent "$0" string.
+        const priceValue = isFree || Number(price) === 0
+            ? "Free"
+            : `$${Number(price).toFixed(2)}`;
+
         const updatedEvent = {
             id: event.id,
-            title,
+            title: trimmedTitle,
             date,
             time,
             organizer: `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || user?.email || event?.organizer || "Organizer",
-            location,
-            price: isFree ? "Free" : price ? `$${price}` : "$0",
+            location: trimmedLocation,
+            price: priceValue,
             image,
-            description,
+            description: trimmedDescription,
             capacity,
             status
         };
 
+        setSaving(true);
         try {
             await updateEvent(event.id, updatedEvent);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to update event");
+            setSaving(false);
             return;
         }
 
-        navigate("/main");
+        navigate("/my-events");
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,9 +177,15 @@ const EditMyEventDetails: React.FC = () => {
                         <div className="post-left">
                             <div className="ticket-event-card image-upload-box">
                                 <img
-                                    src={imagePreview || image}
+                                    src={imagePreview || image || defaultImage}
                                     alt="Event"
                                     className="image-preview"
+                                    onError={(e) => {
+                                        const target = e.currentTarget;
+                                        if (target.src !== defaultImage) {
+                                            target.src = defaultImage;
+                                        }
+                                    }}
                                 />
 
                                 <label className="upload-btn" style={{ marginTop: "12px" }}>
@@ -251,8 +295,12 @@ const EditMyEventDetails: React.FC = () => {
                                 </div>
                             </div>
 
-                            <button className="post-event-btn" onClick={handleSave}>
-                                {uploadingImage ? "Uploading image..." : "Save Changes"}
+                            <button
+                                className="post-event-btn"
+                                onClick={handleSave}
+                                disabled={saving || uploadingImage}
+                            >
+                                {uploadingImage ? "Uploading image..." : saving ? "Saving..." : "Save Changes"}
                             </button>
                             {error && <p className="form-error">{error}</p>}
                         </div>

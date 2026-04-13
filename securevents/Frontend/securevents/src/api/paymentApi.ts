@@ -1,3 +1,5 @@
+import { authFetch } from "./authFetch";
+
 const BASE_URL = "http://localhost:5000/api/payments";
 
 async function buildError(response: Response, fallback: string) {
@@ -20,7 +22,7 @@ export async function checkoutPayment(payload: {
     buyerEmail: string;
     cardLast4: string;
 }) {
-    const response = await fetch(`${BASE_URL}/checkout`, {
+    const response = await authFetch(`${BASE_URL}/checkout`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

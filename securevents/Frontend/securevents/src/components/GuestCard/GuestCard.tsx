@@ -5,13 +5,14 @@ type Props = {
   id: number;
   title: string;
   name: string;
-  email: string; 
+  email: string;
   dateTime: string;
   status?: string;
   onCancel?: (id: number) => void;
+  cancelling?: boolean;
 };
 
-const GuestCard: React.FC<Props> = ({ id, title, name, email, dateTime, status = "Confirmed", onCancel }) => {
+const GuestCard: React.FC<Props> = ({ id, title, name, email, dateTime, status = "Confirmed", onCancel, cancelling = false }) => {
   const [checkedIn, setCheckedIn] = useState(false);
 
   const handleCheckIn = (e: React.MouseEvent) => {
@@ -47,9 +48,9 @@ const GuestCard: React.FC<Props> = ({ id, title, name, email, dateTime, status =
           e.stopPropagation();
           onCancel?.(id);
         }}
-        disabled={status !== "Confirmed"}
+        disabled={status !== "Confirmed" || cancelling}
       >
-        {status === "Confirmed" ? "Cancel Ticket" : status}
+        {cancelling ? "Cancelling..." : status === "Confirmed" ? "Cancel Ticket" : status}
       </button>
 
     </div>

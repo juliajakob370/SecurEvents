@@ -50,23 +50,66 @@ const AdminDashboardPage: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+
+  const runAction = async (key: string, confirmMessage: string | null, action: () => Promise<unknown>) => {
+    if (busyKey !== null) return;
+    if (confirmMessage && !window.confirm(confirmMessage)) return;
+
+    setBusyKey(key);
+    setError("");
+    try {
+      await action();
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Action failed.");
+    } finally {
+      setBusyKey(null);
+    }
+  };
 
   const load = async () => {
-    try {
-      setError("");
-      const [pendingData, allEventsData, usersData, bookingsData] = await Promise.all([
-        getPendingEvents(),
-        getAllEvents(),
-        getAdminUsers(),
-        getAdminBookings(),
-      ]);
+    setError("");
 
-      setPendingEvents(Array.isArray(pendingData) ? pendingData : []);
-      setAllEvents(Array.isArray(allEventsData) ? allEventsData : []);
-      setUsers(Array.isArray(usersData) ? usersData : []);
-      setBookings(Array.isArray(bookingsData) ? bookingsData : []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load admin dashboard.");
+    const [pendingResult, allEventsResult, usersResult, bookingsResult] = await Promise.allSettled([
+      getPendingEvents(),
+      getAllEvents(),
+      getAdminUsers(),
+      getAdminBookings(),
+    ]);
+
+    const failures: string[] = [];
+
+    if (pendingResult.status === "fulfilled") {
+      setPendingEvents(Array.isArray(pendingResult.value) ? pendingResult.value : []);
+    } else {
+      failures.push("pending events");
+      setPendingEvents([]);
+    }
+
+    if (allEventsResult.status === "fulfilled") {
+      setAllEvents(Array.isArray(allEventsResult.value) ? allEventsResult.value : []);
+    } else {
+      failures.push("all events");
+      setAllEvents([]);
+    }
+
+    if (usersResult.status === "fulfilled") {
+      setUsers(Array.isArray(usersResult.value) ? usersResult.value : []);
+    } else {
+      failures.push("users");
+      setUsers([]);
+    }
+
+    if (bookingsResult.status === "fulfilled") {
+      setBookings(Array.isArray(bookingsResult.value) ? bookingsResult.value : []);
+    } else {
+      failures.push("bookings");
+      setBookings([]);
+    }
+
+    if (failures.length > 0) {
+      setError(`Failed to load: ${failures.join(", ")}. Please refresh or re-login.`);
     }
   };
 
@@ -139,8 +182,20 @@ const AdminDashboardPage: React.FC = () => {
                   <strong>{ev.title}</strong> - {ev.organizer} <span className="admin-pill pending">pending</span>
                 </div>
                 <div className="admin-actions">
-                  <button className="admin-btn success" onClick={async () => { if (!ev.id) return; await approveEvent(ev.id); await load(); }}>Approve</button>
-                  <button className="admin-btn danger" onClick={async () => { if (!ev.id) return; await rejectEvent(ev.id); await load(); }}>Reject</button>
+                  <button
+                    className="admin-btn success"
+                    disabled={busyKey !== null}
+                    onClick={() => ev.id && runAction(`approve:${ev.id}`, `Approve "${ev.title}"?`, () => approveEvent(ev.id!))}
+                  >
+                    {busyKey === `approve:${ev.id}` ? "Approving..." : "Approve"}
+                  </button>
+                  <button
+                    className="admin-btn danger"
+                    disabled={busyKey !== null}
+                    onClick={() => ev.id && runAction(`reject:${ev.id}`, `Reject "${ev.title}"? This cancels the event.`, () => rejectEvent(ev.id!))}
+                  >
+                    {busyKey === `reject:${ev.id}` ? "Rejecting..." : "Reject"}
+                  </button>
                 </div>
               </div>
             ))}
@@ -154,8 +209,12 @@ const AdminDashboardPage: React.FC = () => {
                   <strong>{ev.title}</strong> - {ev.organizer} - {ev.date} {ev.time} <span className={`admin-pill ${ev.status}`}>{ev.status}</span>
                 </div>
                 <div className="admin-actions">
-                  <button className="admin-btn danger" onClick={async () => { if (!ev.id) return; await cancelEventAsAdmin(ev.id); await load(); }}>
-                    Cancel Event
+                  <button
+                    className="admin-btn danger"
+                    disabled={busyKey !== null}
+                    onClick={() => ev.id && runAction(`cancelEvent:${ev.id}`, `Cancel event "${ev.title}"? This cannot be undone.`, () => cancelEventAsAdmin(ev.id!))}
+                  >
+                    {busyKey === `cancelEvent:${ev.id}` ? "Cancelling..." : "Cancel Event"}
                   </button>
                 </div>
               </div>
@@ -171,8 +230,18 @@ const AdminDashboardPage: React.FC = () => {
                 </div>
                 {u.role !== "Admin" && (
                   <div className="admin-actions">
-                    <button className={`admin-btn ${u.isSuspended ? "success" : "danger"}`} onClick={async () => { u.isSuspended ? await unsuspendUser(u.id) : await suspendUser(u.id); await load(); }}>
-                      {u.isSuspended ? "Unsuspend" : "Suspend"}
+                    <button
+                      className={`admin-btn ${u.isSuspended ? "success" : "danger"}`}
+                      disabled={busyKey !== null}
+                      onClick={() => runAction(
+                        `user:${u.id}`,
+                        u.isSuspended
+                          ? `Unsuspend ${u.email}?`
+                          : `Suspend ${u.email}? They will lose access until unsuspended.`,
+                        () => u.isSuspended ? unsuspendUser(u.id) : suspendUser(u.id)
+                      )}
+                    >
+                      {busyKey === `user:${u.id}` ? "Working..." : u.isSuspended ? "Unsuspend" : "Suspend"}
                     </button>
                   </div>
                 )}
@@ -189,8 +258,16 @@ const AdminDashboardPage: React.FC = () => {
                 </div>
                 <div className="admin-actions">
                   {b.status === "Confirmed" && (
-                    <button className="admin-btn danger" onClick={async () => { await cancelBookingAsAdmin(b.id); await load(); }}>
-                      Cancel Ticket
+                    <button
+                      className="admin-btn danger"
+                      disabled={busyKey !== null}
+                      onClick={() => runAction(
+                        `booking:${b.id}`,
+                        `Cancel booking #${b.id} and refund ${b.buyerEmail}?`,
+                        () => cancelBookingAsAdmin(b.id)
+                      )}
+                    >
+                      {busyKey === `booking:${b.id}` ? "Cancelling..." : "Cancel Ticket"}
                     </button>
                   )}
                 </div>

@@ -1,3 +1,5 @@
+import { authFetch } from "./authFetch";
+
 const BASE_URL = "http://localhost:5000/api/bookings";
 
 async function buildError(response: Response, fallback: string) {
@@ -20,9 +22,8 @@ export async function createBooking(payload: {
     buyerEmail: string;
     transactionId: number;
 }) {
-    const response = await fetch(BASE_URL, {
+    const response = await authFetch(BASE_URL, {
         method: "POST",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
@@ -37,9 +38,8 @@ export async function createBooking(payload: {
 }
 
 export async function getBookingsByEmail(email: string) {
-    const response = await fetch(`${BASE_URL}?email=${encodeURIComponent(email)}`, {
-        method: "GET",
-        credentials: "include"
+    const response = await authFetch(`${BASE_URL}?email=${encodeURIComponent(email)}`, {
+        method: "GET"
     });
 
     if (!response.ok) {
@@ -50,9 +50,8 @@ export async function getBookingsByEmail(email: string) {
 }
 
 export async function getBookingsByEvent(eventId: number) {
-    const response = await fetch(`${BASE_URL}?eventId=${eventId}`, {
-        method: "GET",
-        credentials: "include"
+    const response = await authFetch(`${BASE_URL}?eventId=${eventId}`, {
+        method: "GET"
     });
 
     if (!response.ok) {
@@ -63,9 +62,8 @@ export async function getBookingsByEvent(eventId: number) {
 }
 
 export async function cancelBooking(bookingId: number) {
-    const response = await fetch(`${BASE_URL}/${bookingId}/cancel`, {
-        method: "POST",
-        credentials: "include"
+    const response = await authFetch(`${BASE_URL}/${bookingId}/cancel`, {
+        method: "POST"
     });
 
     if (!response.ok) {

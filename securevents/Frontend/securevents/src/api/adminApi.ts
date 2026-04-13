@@ -1,4 +1,5 @@
 import { EventItem } from "./eventApi";
+import { authFetch } from "./authFetch";
 
 const USER_BASE = "http://localhost:5000/api/users";
 const EVENT_BASE = "http://localhost:5000/api/events";
@@ -17,9 +18,7 @@ async function buildError(response: Response, fallback: string) {
 }
 
 export async function getAdminUsers() {
-    const response = await fetch(`${USER_BASE}/admin/all`, {
-        credentials: "include"
-    });
+    const response = await authFetch(`${USER_BASE}/admin/all`);
 
     if (!response.ok) {
         throw await buildError(response, "Failed to load users");
@@ -29,9 +28,8 @@ export async function getAdminUsers() {
 }
 
 export async function suspendUser(userId: number) {
-    const response = await fetch(`${USER_BASE}/admin/${userId}/suspend`, {
-        method: "POST",
-        credentials: "include"
+    const response = await authFetch(`${USER_BASE}/admin/${userId}/suspend`, {
+        method: "POST"
     });
 
     if (!response.ok) {
@@ -42,9 +40,8 @@ export async function suspendUser(userId: number) {
 }
 
 export async function unsuspendUser(userId: number) {
-    const response = await fetch(`${USER_BASE}/admin/${userId}/unsuspend`, {
-        method: "POST",
-        credentials: "include"
+    const response = await authFetch(`${USER_BASE}/admin/${userId}/unsuspend`, {
+        method: "POST"
     });
 
     if (!response.ok) {
@@ -55,9 +52,7 @@ export async function unsuspendUser(userId: number) {
 }
 
 export async function getPendingEvents(): Promise<EventItem[]> {
-    const response = await fetch(`${EVENT_BASE}/admin/pending`, {
-        credentials: "include"
-    });
+    const response = await authFetch(`${EVENT_BASE}/admin/pending`);
 
     if (!response.ok) {
         throw await buildError(response, "Failed to load pending events");
@@ -67,9 +62,7 @@ export async function getPendingEvents(): Promise<EventItem[]> {
 }
 
 export async function getAllEvents(): Promise<EventItem[]> {
-    const response = await fetch(`${EVENT_BASE}/admin/all`, {
-        credentials: "include"
-    });
+    const response = await authFetch(`${EVENT_BASE}/admin/all`);
 
     if (!response.ok) {
         throw await buildError(response, "Failed to load all events");
@@ -79,9 +72,8 @@ export async function getAllEvents(): Promise<EventItem[]> {
 }
 
 export async function approveEvent(eventId: number) {
-    const response = await fetch(`${EVENT_BASE}/${eventId}/admin/approve`, {
-        method: "POST",
-        credentials: "include"
+    const response = await authFetch(`${EVENT_BASE}/${eventId}/admin/approve`, {
+        method: "POST"
     });
 
     if (!response.ok) {
@@ -92,9 +84,8 @@ export async function approveEvent(eventId: number) {
 }
 
 export async function rejectEvent(eventId: number) {
-    const response = await fetch(`${EVENT_BASE}/${eventId}/admin/reject`, {
-        method: "POST",
-        credentials: "include"
+    const response = await authFetch(`${EVENT_BASE}/${eventId}/admin/reject`, {
+        method: "POST"
     });
 
     if (!response.ok) {
@@ -105,9 +96,8 @@ export async function rejectEvent(eventId: number) {
 }
 
 export async function cancelEventAsAdmin(eventId: number) {
-    const response = await fetch(`${EVENT_BASE}/${eventId}`, {
-        method: "DELETE",
-        credentials: "include"
+    const response = await authFetch(`${EVENT_BASE}/${eventId}`, {
+        method: "DELETE"
     });
 
     if (!response.ok) {
@@ -118,9 +108,7 @@ export async function cancelEventAsAdmin(eventId: number) {
 }
 
 export async function getAdminBookings() {
-    const response = await fetch(`${BOOKING_BASE}/admin/all`, {
-        credentials: "include"
-    });
+    const response = await authFetch(`${BOOKING_BASE}/admin/all`);
 
     if (!response.ok) {
         throw await buildError(response, "Failed to load bookings");
@@ -130,9 +118,8 @@ export async function getAdminBookings() {
 }
 
 export async function cancelBookingAsAdmin(bookingId: number) {
-    const response = await fetch(`${BOOKING_BASE}/${bookingId}/cancel`, {
-        method: "POST",
-        credentials: "include"
+    const response = await authFetch(`${BOOKING_BASE}/${bookingId}/cancel`, {
+        method: "POST"
     });
 
     if (!response.ok) {

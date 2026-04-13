@@ -10,7 +10,7 @@ module.exports = function setupProxy(app) {
     res.setHeader("Cross-Origin-Resource-Policy", "same-site");
     res.setHeader(
       "Content-Security-Policy",
-      "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' http://localhost:5000; form-action 'self';"
+      "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: http://localhost:5000; font-src 'self' data:; connect-src 'self' http://localhost:5000; form-action 'self';"
     );
     next();
   });

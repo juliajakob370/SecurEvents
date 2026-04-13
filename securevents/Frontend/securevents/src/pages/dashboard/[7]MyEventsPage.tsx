@@ -1,6 +1,6 @@
 // Imports: React context, routing link, reusable header, styles, event card, profile image, and shared event context.
 import React, { useContext } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import "../../styles/MainPage.css";
@@ -18,29 +18,44 @@ const MyEventsPage: React.FC = () => {
     const { events } = useContext(EventContext);
     const { user } = useContext(AuthContext);
     const [myEvents, setMyEvents] = useState<EventItem[]>([]);
+    const eventsRef = useRef<EventItem[]>(events);
 
     useEffect(() => {
+        eventsRef.current = events;
+    }, [events]);
+
+    useEffect(() => {
+        let disposed = false;
+
         const load = async () => {
             try {
                 const mine = await getMyEvents();
-                setMyEvents(mine);
+                if (!disposed) {
+                    setMyEvents(mine);
+                }
             } catch {
                 // Fallback for legacy records that may not have owner mapping yet.
                 const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim().toLowerCase();
                 const email = (user?.email ?? "").toLowerCase();
 
-                const fallback = events.filter((e) =>
+                const fallback = eventsRef.current.filter((e) =>
                     (user?.id && e.createdByUserId === user.id) ||
                     (fullName && (e.organizer ?? "").toLowerCase() === fullName) ||
                     (email && (e.organizer ?? "").toLowerCase() === email)
                 );
 
-                setMyEvents(fallback);
+                if (!disposed) {
+                    setMyEvents(fallback);
+                }
             }
         };
 
         load();
-    }, [events, user]);
+
+        return () => {
+            disposed = true;
+        };
+    }, [user?.id, user?.email, user?.firstName, user?.lastName]);
 
     return (
         <div style={{ padding: "20px" }}>

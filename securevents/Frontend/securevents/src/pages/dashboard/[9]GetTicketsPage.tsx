@@ -5,6 +5,7 @@ import Header from "../../components/Header/Header";
 import "../../styles/MainPage.css";
 import "../../styles/[9]GetTicketsPage.css";
 import { getEventAvailability } from "../../api/eventApi";
+import defaultImage from "../../assets/default-image.png";
 
 // Type for selected event passed from previous page.
 type SelectedEvent = {
@@ -44,7 +45,9 @@ const GetTicketsPage: React.FC = () => {
 
     // Calculate total price.
     const total = quantity * priceNumber;
-    const isPurchasable = event?.status === "active" && (remainingTickets ?? event?.capacity ?? 0) > 0;
+    // Availability must be known and > 0 before purchase is allowed.
+    // Falling back to capacity is unsafe when the availability API fails (event may be sold out).
+    const isPurchasable = event?.status === "active" && (remainingTickets ?? 0) > 0;
 
     useEffect(() => {
         const loadAvailability = async () => {
@@ -65,6 +68,14 @@ const GetTicketsPage: React.FC = () => {
 
         loadAvailability();
     }, [event?.id]);
+
+    // Clamp quantity when availability resolves or drops below the current selection.
+    useEffect(() => {
+        if (remainingTickets == null) return;
+        if (quantity > remainingTickets) {
+            setQuantity(Math.max(1, remainingTickets));
+        }
+    }, [remainingTickets, quantity]);
 
     // Handle quantity change with safe limits.
     const handleQuantityChange = (value: string) => {
@@ -109,9 +120,15 @@ const GetTicketsPage: React.FC = () => {
                             {/* Event details card */}
                             <div className="ticket-event-card">
                                 <img
-                                    src={event.image}
+                                    src={event.image || defaultImage}
                                     alt={event.title}
                                     className="ticket-event-image"
+                                    onError={(e) => {
+                                        const target = e.currentTarget;
+                                        if (target.src !== defaultImage) {
+                                            target.src = defaultImage;
+                                        }
+                                    }}
                                 />
 
                                 <div className="ticket-event-info">
@@ -144,7 +161,7 @@ const GetTicketsPage: React.FC = () => {
                                     <input
                                         type="number"
                                         min="1"
-                                        max={(remainingTickets ?? event.capacity) > 0 ? (remainingTickets ?? event.capacity) : 1}
+                                        max={(remainingTickets ?? 0) > 0 ? (remainingTickets ?? 1) : 1}
                                         value={quantity}
                                         onChange={(e) => handleQuantityChange(e.target.value)}
                                         disabled={!isPurchasable}

@@ -38,13 +38,13 @@ const profileOptions = [
 
 // Account page component.
 const AccountPage: React.FC = () => {
-    const { user, refreshUser } = useContext(AuthContext);
+    const { user, applyUser, loading } = useContext(AuthContext);
     const profileStorageKey = `secureEventsProfileImage:${user?.id ?? user?.email ?? "guest"}`;
 
     // User info state.
-    const [firstName, setFirstName] = useState("Current");
-    const [lastName, setLastName] = useState("Name");
-    const [email, setEmail] = useState("current@email.com");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("");
     const [selectedProfile, setSelectedProfile] = useState(profile0);
     const [showPopup, setShowPopup] = useState(false);
     const [profileMessage, setProfileMessage] = useState("");
@@ -90,6 +90,11 @@ const AccountPage: React.FC = () => {
     }, [user]);
 
     const handleSaveProfile = async () => {
+        if (loading || !user) {
+            setProfileMessage("Please wait for account data to load.");
+            return;
+        }
+
         const cleanedEmail = email.trim().toLowerCase();
         const cleanedFirstName = firstName.trim();
         const cleanedLastName = lastName.trim();
@@ -113,7 +118,7 @@ const AccountPage: React.FC = () => {
                 return;
             }
 
-            await updateCurrentUser(
+            const result = await updateCurrentUser(
                 cleanedFirstName,
                 cleanedLastName,
                 cleanedEmail,
@@ -121,7 +126,9 @@ const AccountPage: React.FC = () => {
                 emailChangePending ? newEmailCode.trim() : undefined
             );
 
-            await refreshUser();
+            if (result?.user) {
+                applyUser(result.user);
+            }
             setProfileMessage("Account information updated.");
             setEmailChangePending(false);
             setOldEmailCode("");
@@ -302,7 +309,11 @@ const AccountPage: React.FC = () => {
                                     </button>
                                 </div>
 
-                                {profileMessage && <p className="form-error">{profileMessage}</p>}
+                                {profileMessage && (
+                                    <p className={profileMessage.toLowerCase().includes("updated") || profileMessage.toLowerCase().includes("sent") || profileMessage.toLowerCase().includes("change") ? "form-success" : "form-error"}>
+                                        {profileMessage}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Add card form */}

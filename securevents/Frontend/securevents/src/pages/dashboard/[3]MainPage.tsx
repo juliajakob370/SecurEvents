@@ -30,9 +30,13 @@ const MainPage: React.FC = () => {
     }, [events, searchText]);
 
     useEffect(() => {
-        // Keep public list fresh after admin approval/rejection actions.
         refreshEvents();
-    }, [refreshEvents]);
+        const interval = setInterval(() => {
+            refreshEvents();
+        }, 3000);
+        return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <div style={{ padding: "20px" }}>

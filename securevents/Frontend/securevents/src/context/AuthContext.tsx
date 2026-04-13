@@ -17,6 +17,7 @@ type AuthContextType = {
     isAuthenticated: boolean;
     loading: boolean;
     refreshUser: () => Promise<void>;
+    applyUser: (user: AuthUser | null) => void;
     logout: () => Promise<void>;
 };
 
@@ -26,6 +27,7 @@ export const AuthContext = createContext<AuthContextType>({
     isAuthenticated: false,
     loading: true,
     refreshUser: async () => { },
+    applyUser: () => { },
     logout: async () => { }
 });
 
@@ -51,6 +53,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         }
     };
 
+    // Apply a known-good user object without re-fetching.
+    // Used after endpoints (e.g. PUT /me) that already return the updated user,
+    // so a transient /me failure cannot spuriously log the user out.
+    const applyUser = (next: AuthUser | null) => {
+        setUser(next);
+    };
+
     // Logout current user.
     const logout = async () => {
         await logoutUser();
@@ -68,6 +77,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 isAuthenticated: !!user,
                 loading,
                 refreshUser,
+                applyUser,
                 logout
             }}
         >

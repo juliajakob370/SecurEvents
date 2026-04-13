@@ -1,3 +1,5 @@
+import { authFetch } from "./authFetch";
+
 // Event type used by frontend and backend responses.
 export type EventItem = {
     id?: number;
@@ -42,6 +44,7 @@ async function buildError(response: Response, fallback: string) {
 }
 
 export async function getEventAvailability(eventId: number) {
+    // Public endpoint — no auth needed.
     const response = await fetch(`${BASE_URL}/${eventId}/availability`, {
         method: "GET"
     });
@@ -57,9 +60,8 @@ export async function uploadEventImage(file: File) {
     const form = new FormData();
     form.append("file", file);
 
-    const response = await fetch(`${BASE_URL}/upload-image`, {
+    const response = await authFetch(`${BASE_URL}/upload-image`, {
         method: "POST",
-        credentials: "include",
         body: form
     });
 
@@ -72,12 +74,8 @@ export async function uploadEventImage(file: File) {
     return { imageUrl };
 }
 
-// Get all events from backend.
 export async function getEvents(): Promise<EventItem[]> {
-    const response = await fetch(BASE_URL, {
-        method: "GET",
-        credentials: "include"
-    });
+    const response = await authFetch(BASE_URL, { method: "GET" });
 
     if (!response.ok) {
         throw await buildError(response, "Failed to load events");
@@ -90,9 +88,8 @@ export async function getEvents(): Promise<EventItem[]> {
 }
 
 export async function requestEventCancelCode(eventId: number) {
-    const response = await fetch(`${BASE_URL}/${eventId}/request-cancel-code`, {
-        method: "POST",
-        credentials: "include"
+    const response = await authFetch(`${BASE_URL}/${eventId}/request-cancel-code`, {
+        method: "POST"
     });
 
     if (!response.ok) {
@@ -103,9 +100,8 @@ export async function requestEventCancelCode(eventId: number) {
 }
 
 export async function refundCancelEvent(eventId: number, code: string) {
-    const response = await fetch(`${BASE_URL}/${eventId}/refund-cancel`, {
+    const response = await authFetch(`${BASE_URL}/${eventId}/refund-cancel`, {
         method: "POST",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
@@ -125,10 +121,7 @@ export async function refundCancelEvent(eventId: number, code: string) {
 }
 
 export async function getMyEvents(): Promise<EventItem[]> {
-    const response = await fetch(`${BASE_URL}/my`, {
-        method: "GET",
-        credentials: "include"
-    });
+    const response = await authFetch(`${BASE_URL}/my`, { method: "GET" });
 
     if (!response.ok) {
         throw await buildError(response, "Failed to load your events");
@@ -140,11 +133,9 @@ export async function getMyEvents(): Promise<EventItem[]> {
         : [];
 }
 
-// Create a new event in backend.
 export async function createEvent(eventData: EventItem) {
-    const response = await fetch(BASE_URL, {
+    const response = await authFetch(BASE_URL, {
         method: "POST",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
@@ -159,11 +150,9 @@ export async function createEvent(eventData: EventItem) {
     return { ...created, image: normalizeImageUrl(created?.image) };
 }
 
-// Update event.
 export async function updateEvent(eventId: string, eventData: EventItem) {
-    const response = await fetch(`${BASE_URL}/${eventId}`, {
+    const response = await authFetch(`${BASE_URL}/${eventId}`, {
         method: "PUT",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
@@ -178,11 +167,9 @@ export async function updateEvent(eventId: string, eventData: EventItem) {
     return { ...updated, image: normalizeImageUrl(updated?.image) };
 }
 
-// Delete event.
 export async function deleteEvent(eventId: string) {
-    const response = await fetch(`${BASE_URL}/${eventId}`, {
-        method: "DELETE",
-        credentials: "include"
+    const response = await authFetch(`${BASE_URL}/${eventId}`, {
+        method: "DELETE"
     });
 
     if (!response.ok) {

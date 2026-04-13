@@ -78,10 +78,10 @@
   color: #6b5ca5;
 }
 
-/* REFUNDED STYLE */
+/* REFUNDED / CANCELLED STYLE */
 .ticket-refunded {
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
+  background: #ffd6d6;
+  border: 1px solid #f4a5a5;
 }
 
 .ticket-refunded .ticket-icon {

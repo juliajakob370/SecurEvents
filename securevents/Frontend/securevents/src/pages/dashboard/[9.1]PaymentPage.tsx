@@ -8,6 +8,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { requestPaymentCode, verifyPaymentCode } from "../../api/authApi";
 import { checkoutPayment } from "../../api/paymentApi";
 import { createBooking } from "../../api/bookingApi";
+import { getEventAvailability } from "../../api/eventApi";
 
 // Type for selected event.
 type SelectedEvent = {
@@ -67,6 +68,10 @@ const PaymentPage: React.FC = () => {
 
     // Validation errors.
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Prevents double-submit that would charge the card twice.
+    const [submitting, setSubmitting] = useState(false);
+    const [sendingCode, setSendingCode] = useState(false);
 
     // Load saved cards from localStorage.
     useEffect(() => {
@@ -155,25 +160,35 @@ const PaymentPage: React.FC = () => {
 
     // Send verification code to user email before payment confirmation.
     const handleSendCode = async () => {
+        if (sendingCode) return;
+
         const email = user?.email?.trim().toLowerCase();
         if (!email) {
             setVerificationMessage("Could not detect account email.");
             return;
         }
 
+        setSendingCode(true);
         try {
             await requestPaymentCode();
+            // Clear the previous (now-invalidated) code so users don't submit the stale value.
+            setVerificationCode("");
             setCodeSent(true);
             setCodeVerified(false);
+            setErrors((prev) => ({ ...prev, verificationCode: "" }));
             setVerificationMessage("Verification code sent to your email.");
         } catch (err) {
             setVerificationMessage(err instanceof Error ? err.message : "Failed to send verification code.");
+        } finally {
+            setSendingCode(false);
         }
     };
 
     // Final secure payment confirmation.
     const handleConfirmPayment = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (submitting) return;
 
         const newErrors: Record<string, string> = {};
 
@@ -203,63 +218,112 @@ const PaymentPage: React.FC = () => {
             return;
         }
 
-        if (!codeVerified) {
-            try {
-                await verifyPaymentCode(verificationCode);
-                setCodeVerified(true);
-                setVerificationMessage("Verification successful.");
-            } catch (err) {
-                setVerificationMessage(err instanceof Error ? err.message : "Invalid verification code.");
+        setSubmitting(true);
+        try {
+            if (!codeVerified) {
+                try {
+                    await verifyPaymentCode(verificationCode);
+                    setCodeVerified(true);
+                    setVerificationMessage("Verification successful.");
+                } catch (err) {
+                    setVerificationMessage(err instanceof Error ? err.message : "Invalid verification code.");
+                    return;
+                }
+            }
+
+            if (!selectedCard) {
+                setVerificationMessage("Please select a payment card.");
                 return;
             }
-        }
 
-        if (!selectedCard) {
-            setVerificationMessage("Please select a payment card.");
-            return;
-        }
-
-        let transactionId: number | null = null;
-
-        try {
             if (!event.id) {
                 setVerificationMessage("Invalid event for checkout.");
                 return;
             }
 
-            const payment = await checkoutPayment({
-                eventId: event.id,
-                eventTitle: event.title,
-                quantity,
-                totalAmount: Number(total),
-                buyerEmail: user?.email?.trim().toLowerCase() ?? "",
-                cardLast4: selectedCard.cardLast4
-            });
-
-            transactionId = payment?.transactionId ?? null;
-
-            await createBooking({
-                eventId: event.id,
-                eventTitle: event.title,
-                quantity,
-                totalAmount: Number(total),
-                buyerEmail: user?.email?.trim().toLowerCase() ?? "",
-                transactionId: transactionId ?? 0
-            });
-        } catch (err) {
-            setVerificationMessage(err instanceof Error ? err.message : "Payment failed.");
-            return;
-        }
-
-        navigate("/ticket-booked", {
-            state: {
-                event,
-                quantity,
-                total,
-                selectedCard,
-                transactionId
+            // Re-check availability at submit time so we don't charge the card
+            // for a quantity that is no longer available.
+            try {
+                const availability = await getEventAvailability(event.id);
+                const remaining = Number(availability?.remaining ?? 0);
+                if (remaining < quantity) {
+                    setVerificationMessage(
+                        remaining <= 0
+                            ? "This event just sold out. Please go back and pick another event."
+                            : `Only ${remaining} ticket(s) left. Please reduce the quantity and try again.`
+                    );
+                    return;
+                }
+            } catch {
+                setVerificationMessage("Could not verify ticket availability. Please try again.");
+                return;
             }
-        });
+
+            let transactionId: number | null = null;
+            try {
+                const payment = await checkoutPayment({
+                    eventId: event.id,
+                    eventTitle: event.title,
+                    quantity,
+                    totalAmount: Number(total),
+                    buyerEmail: user?.email?.trim().toLowerCase() ?? "",
+                    cardLast4: selectedCard.cardLast4
+                });
+
+                transactionId = payment?.transactionId ?? null;
+            } catch (err) {
+                setVerificationMessage(err instanceof Error ? err.message : "Payment failed.");
+                return;
+            }
+
+            if (!transactionId) {
+                setVerificationMessage("Payment did not return a valid transaction ID. Please try again.");
+                return;
+            }
+
+            // Payment succeeded — retry booking a few times so a transient failure
+            // does not leave the user charged without a ticket.
+            const bookingPayload = {
+                eventId: event.id,
+                eventTitle: event.title,
+                quantity,
+                totalAmount: Number(total),
+                buyerEmail: user?.email?.trim().toLowerCase() ?? "",
+                transactionId
+            };
+
+            let bookingError: unknown = null;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    await createBooking(bookingPayload);
+                    bookingError = null;
+                    break;
+                } catch (err) {
+                    bookingError = err;
+                    await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+                }
+            }
+
+            if (bookingError) {
+                setVerificationMessage(
+                    `Payment succeeded (transaction ${transactionId}) but booking could not be saved. ` +
+                    `Please contact support with this transaction ID so your ticket can be issued.`
+                );
+                return;
+            }
+
+            navigate("/ticket-booked", {
+                state: {
+                    event,
+                    quantity,
+                    total,
+                    selectedCard,
+                    transactionId
+                }
+            });
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -422,8 +486,9 @@ const PaymentPage: React.FC = () => {
                                         type="button"
                                         className="confirm-payment-btn secondary-btn"
                                         onClick={handleSendCode}
+                                        disabled={sendingCode}
                                     >
-                                        Send Verification Code
+                                        {sendingCode ? "Sending..." : codeSent ? "Resend Verification Code" : "Send Verification Code"}
                                     </button>
                                 </div>
 
@@ -445,8 +510,12 @@ const PaymentPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                <button type="submit" className="confirm-payment-btn">
-                                    Confirm Secure Payment
+                                <button
+                                    type="submit"
+                                    className="confirm-payment-btn"
+                                    disabled={submitting || !paymentAllowed}
+                                >
+                                    {submitting ? "Processing..." : "Confirm Secure Payment"}
                                 </button>
                             </form>
                         </div>

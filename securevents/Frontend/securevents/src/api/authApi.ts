@@ -1,3 +1,5 @@
+import { authFetch } from "./authFetch";
+
 // Auth API functions for login, signup, verification, and current user.
 const BASE_URL = "http://localhost:5000/api/users";
 
@@ -13,19 +15,6 @@ async function buildError(response: Response, fallback: string) {
     return new Error(fallback);
 }
 
-async function tryRefreshToken() {
-    const response = await fetch(`${BASE_URL}/refresh-token`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({})
-    });
-
-    return response.ok;
-}
-
 // Update logged-in user profile.
 export async function updateCurrentUser(
     firstName: string,
@@ -34,9 +23,8 @@ export async function updateCurrentUser(
     oldEmailCode?: string,
     newEmailCode?: string
 ) {
-    const response = await fetch(`${BASE_URL}/me`, {
+    const response = await authFetch(`${BASE_URL}/me`, {
         method: "PUT",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
@@ -51,9 +39,8 @@ export async function updateCurrentUser(
 }
 
 export async function requestEmailChangeCodes(newEmail: string) {
-    const response = await fetch(`${BASE_URL}/email-change/request-codes`, {
+    const response = await authFetch(`${BASE_URL}/email-change/request-codes`, {
         method: "POST",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
@@ -69,9 +56,8 @@ export async function requestEmailChangeCodes(newEmail: string) {
 
 // Send dedicated payment verification code for logged-in user.
 export async function requestPaymentCode() {
-    const response = await fetch(`${BASE_URL}/payment/send-code`, {
-        method: "POST",
-        credentials: "include"
+    const response = await authFetch(`${BASE_URL}/payment/send-code`, {
+        method: "POST"
     });
 
     if (!response.ok) {
@@ -83,9 +69,8 @@ export async function requestPaymentCode() {
 
 // Verify dedicated payment verification code for logged-in user.
 export async function verifyPaymentCode(code: string) {
-    const response = await fetch(`${BASE_URL}/payment/verify-code`, {
+    const response = await authFetch(`${BASE_URL}/payment/verify-code`, {
         method: "POST",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
@@ -177,20 +162,7 @@ export async function verifySignupCode(email: string, code: string) {
 
 // Get currently logged-in user from backend session cookie.
 export async function getCurrentUser() {
-    let response = await fetch(`${BASE_URL}/me`, {
-        method: "GET",
-        credentials: "include"
-    });
-
-    if (response.status === 401) {
-        const refreshed = await tryRefreshToken();
-        if (refreshed) {
-            response = await fetch(`${BASE_URL}/me`, {
-                method: "GET",
-                credentials: "include"
-            });
-        }
-    }
+    const response = await authFetch(`${BASE_URL}/me`, { method: "GET" });
 
     if (!response.ok) {
         throw await buildError(response, "Failed to get current user");

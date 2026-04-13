@@ -31,6 +31,7 @@ const GuestListPage: React.FC = () => {
 
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [error, setError] = useState("");
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   const loadGuests = useCallback(async () => {
     if (!event?.id) {
@@ -62,11 +63,22 @@ const GuestListPage: React.FC = () => {
   );
 
   const handleCancel = async (bookingId: number) => {
+    if (cancellingId !== null) return;
+
+    const confirmed = window.confirm(
+      "Cancel this guest's ticket and refund them? This cannot be undone."
+    );
+    if (!confirmed) return;
+
+    setCancellingId(bookingId);
+    setError("");
     try {
       await cancelBooking(bookingId);
       await loadGuests();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to cancel ticket.");
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -114,6 +126,7 @@ const GuestListPage: React.FC = () => {
                     dateTime={`${event?.date ?? ""} ${event?.time ?? ""}`.trim() || new Date(booking.bookedAt).toLocaleString()}
                     status={booking.status}
                     onCancel={handleCancel}
+                    cancelling={cancellingId === booking.id}
                   />
                 );
               })

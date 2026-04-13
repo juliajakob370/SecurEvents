@@ -1,5 +1,5 @@
 // Imports: React tools for context, state, and lifecycle.
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useEffect, useState } from "react";
 import {
     createEvent,
     deleteEvent,
@@ -38,14 +38,14 @@ export const EventProvider: React.FC<Props> = ({ children }) => {
     // Main shared event list state.
     const [events, setEvents] = useState<EventItem[]>([]);
 
-    const refreshEvents = async () => {
+    const refreshEvents = useCallback(async () => {
         try {
             const list = await getEvents();
             setEvents(Array.isArray(list) ? list : []);
         } catch {
             setEvents([]);
         }
-    };
+    }, []);
 
     // Load events from backend when app starts.
     useEffect(() => {

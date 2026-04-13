@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./MyEventCard.css";
 import { EventContext } from "../../context/EventContext";
 import { refundCancelEvent, requestEventCancelCode } from "../../api/eventApi";
+import defaultImage from "../../assets/default-image.png";
 
 // Props for each event card in My Events page.
 type Props = {
@@ -38,10 +39,12 @@ const MyEventCard: React.FC<Props> = ({
 }) => {
     const navigate = useNavigate();
     const { removeEvent, refreshEvents } = useContext(EventContext);
+    const [processing, setProcessing] = React.useState(false);
 
     // Delete or refund action.
     const handleDelete = async (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (processing) return;
 
         const isPast = status === "past" || status === "cancelled" || status === "pending";
 
@@ -55,12 +58,13 @@ const MyEventCard: React.FC<Props> = ({
             return;
         }
 
-        if (isPast) {
-            await removeEvent(id);
-            return;
-        }
-
+        setProcessing(true);
         try {
+            if (isPast) {
+                await removeEvent(id);
+                return;
+            }
+
             await requestEventCancelCode(id);
             const code = window.prompt("Verification code sent to your email. Enter code to refund and cancel event:", "");
             if (!code) {
@@ -71,6 +75,8 @@ const MyEventCard: React.FC<Props> = ({
             await refreshEvents();
         } catch (err) {
             alert(err instanceof Error ? err.message : "Failed to refund and cancel event.");
+        } finally {
+            setProcessing(false);
         }
     };
 
@@ -102,7 +108,16 @@ const MyEventCard: React.FC<Props> = ({
         >
             {/* Left: event image */}
             <div className="event-image">
-                <img src={image} alt={title} />
+                <img
+                    src={image || defaultImage}
+                    alt={title}
+                    onError={(e) => {
+                        const target = e.currentTarget;
+                        if (target.src !== defaultImage) {
+                            target.src = defaultImage;
+                        }
+                    }}
+                />
             </div>
 
             {/* Middle: event content */}
@@ -220,10 +235,16 @@ const MyEventCard: React.FC<Props> = ({
                 <button
                     className="btn delete-btn"
                     onClick={handleDelete}
-                    disabled={isCancelled}
+                    disabled={isCancelled || processing}
                 >
                     <i className={`bi ${status === "past" || status === "cancelled" || status === "pending" ? "bi-trash-fill" : "bi-cash-coin"}`}></i>
-                    {status === "pending" ? "Cancel Pending" : status === "past" || status === "cancelled" ? "Cancelled" : "Refund"}
+                    {processing
+                        ? "Processing..."
+                        : status === "pending"
+                            ? "Cancel Pending"
+                            : status === "past" || status === "cancelled"
+                                ? "Cancelled"
+                                : "Refund"}
                 </button>
             </div>
         </div>

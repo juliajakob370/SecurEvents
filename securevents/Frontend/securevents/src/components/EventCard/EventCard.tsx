@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./EventCard.css";
+import defaultImage from "../../assets/default-image.png";
 
 // Props for a single event card.
 type Props = {
@@ -59,7 +60,16 @@ const EventCard: React.FC<Props> = ({
         >
             {/* Left: event image */}
             <div className="event-image">
-                <img src={image} alt={title} />
+                <img
+                    src={image || defaultImage}
+                    alt={title}
+                    onError={(e) => {
+                        const target = e.currentTarget;
+                        if (target.src !== defaultImage) {
+                            target.src = defaultImage;
+                        }
+                    }}
+                />
             </div>
 
             {/* Right: event content */}

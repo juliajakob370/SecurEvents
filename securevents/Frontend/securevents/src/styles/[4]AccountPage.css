@@ -3,6 +3,14 @@
     padding: 28px;
 }
 
+.form-success {
+    margin-top: 6px;
+    color: #16a34a;
+    font-size: 13px;
+    font-weight: 600;
+    padding-left: 4px;
+}
+
 /* Main two-column layout */
 .account-page-layout {
     display: grid;

@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import "../../styles/MainPage.css";
 import "../../styles/PostEventPage.css";
-import defaultImage from "../../assets/default-image.png";
 import { AuthContext } from "../../context/AuthContext";
 import { uploadEventImage } from "../../api/eventApi";
+import defaultImage from "../../assets/default-image.png";
 
 const PostEventPage: React.FC = () => {
   const [title, setTitle] = useState("");
@@ -133,12 +133,12 @@ const PostEventPage: React.FC = () => {
       organizer: `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || user?.email || "Organizer",
       location: location.trim(),
       price: isFree ? "Free" : `$${Number(price).toFixed(2)}`,
-      image: image || defaultImage,
+      image: image ?? "",
       date,
       time,
       description: description.trim(),
       capacity,
-      status: fullDateTime < new Date() ? "past" : "active",
+      status: "pending",
     };
 
     try {
@@ -163,7 +163,7 @@ const PostEventPage: React.FC = () => {
     setIsFree(false);
     setErrors({});
 
-    navigate("/main");
+    navigate("/my-events");
   };
 
   const isFormValid =
@@ -187,7 +187,16 @@ const PostEventPage: React.FC = () => {
             {/* LEFT */}
             <div className="post-left-card">
               <div className="image-container">
-                <img src={imagePreview || image || defaultImage} alt="Event" />
+                <img
+                  src={imagePreview || image || defaultImage}
+                  alt="Event"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src !== defaultImage) {
+                      target.src = defaultImage;
+                    }
+                  }}
+                />
               </div>
 
               <label className="upload-btn">
