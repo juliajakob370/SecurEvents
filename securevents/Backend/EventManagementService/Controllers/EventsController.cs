@@ -264,7 +264,23 @@ public class EventsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("EVENT_CANCEL_CODE eventId={EventId} ownerEmail={OwnerEmail} code={Code}", id, ownerEmail, code);
+        // Print cancellation code in a colorful banner so it's easy to spot.
+        var prevColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine();
+        Console.WriteLine("╔══════════════════════════════════════════════════════╗");
+        Console.WriteLine("║           🔴  EVENT CANCELLATION CODE  🔴           ║");
+        Console.WriteLine("╠══════════════════════════════════════════════════════╣");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"║  Event:  #{id,-43} ║");
+        Console.WriteLine($"║  Email:  {ownerEmail,-43} ║");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"║  Code:   {code,-43} ║");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("╚══════════════════════════════════════════════════════╝");
+        Console.WriteLine();
+        Console.ForegroundColor = prevColor;
+
         await _loggingClient.LogAsync("event-cancel-code-requested", $"Cancel code requested for event {id} by {ownerEmail}");
 
         return Ok(new { message = "Cancellation code generated. Check backend console." });

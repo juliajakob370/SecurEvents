@@ -64,7 +64,7 @@ const MyTicketsPage: React.FC = () => {
                 id={ticket.id}
                 title={ticket.eventTitle}
                 name={ticket.buyerEmail}
-                dateTime={`${new Date(ticket.bookedAt).toLocaleString()} � Qty ${ticket.quantity} � $${Number(ticket.totalAmount).toFixed(2)}`}
+                dateTime={`${new Date(ticket.bookedAt).toLocaleString()} • Qty ${ticket.quantity} • $${Number(ticket.totalAmount).toFixed(2)}`}
                 status={ticket.status === "Refunded" || ticket.status === "Cancelled" ? "refunded" : ticket.status === "Confirmed" ? "active" : "used"}
                 onClick={() => setSelectedTicket(ticket)}
               />

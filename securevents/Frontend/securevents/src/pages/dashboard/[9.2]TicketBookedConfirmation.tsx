@@ -116,10 +116,10 @@ const TicketBookedConfirmation: React.FC = () => {
               </button>
 
               <button
-                onClick={() => navigate("/main")}
+                onClick={() => navigate("/my-tickets")}
                 className="confirmation-btn secondary"
               >
-                Back to Home
+                View My Tickets
               </button>
             </div>
           </div>

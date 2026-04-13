@@ -12,13 +12,13 @@ import profile4 from "../../assets/profilePics/profile4.png";
 import profile5 from "../../assets/profilePics/profile5.png";
 import profile6 from "../../assets/profilePics/profile6.png";
 import profile7 from "../../assets/profilePics/profile7.png";
+import { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
 import MenuDropdown from "../MenuDropdown/MenuDropdown";
 
 // Profile picture lookup: the backend stores the index (0 is the default) and
 // each user's picture is derived here so no per-browser state leaks across accounts.
 const PROFILE_IMAGES = [profile0, profile1, profile2, profile3, profile4, profile5, profile6, profile7];
-import { useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
 
 // Props for reusable header component.
 type HeaderProps = {
