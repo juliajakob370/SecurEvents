@@ -51,8 +51,9 @@ const Header: React.FC<HeaderProps> = ({
     { label: "Log Out", icon: "bi-box-arrow-right", path: "/" },
   ];
 
-  const profileIndex = user?.profileImageIndex ?? 0;
-  const resolvedProfile = PROFILE_IMAGES[profileIndex] ?? PROFILE_IMAGES[0];
+  const rawIndex = user?.profileImageIndex ?? 0;
+  const profileIndex = rawIndex >= 0 && rawIndex <= 7 ? rawIndex : 0;
+  const resolvedProfile = PROFILE_IMAGES[profileIndex];
 
   const handleMenuClick = async (item: { label: string; path: string }) => {
     if (item.label === "Log Out") {

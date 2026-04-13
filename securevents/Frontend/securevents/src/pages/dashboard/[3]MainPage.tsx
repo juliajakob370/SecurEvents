@@ -4,14 +4,12 @@ import Header from "../../components/Header/Header";
 import "../../styles/MainPage.css";
 import EventCard from "../../components/EventCard/EventCard";
 import { EventContext } from "../../context/EventContext";
-import { AuthContext } from "../../context/AuthContext";
 import { useMemo, useState } from "react";
 
 // Main dashboard page.
 const MainPage: React.FC = () => {
     // Read posted events from shared context.
     const { events, refreshEvents } = useContext(EventContext);
-    const { user } = useContext(AuthContext);
     const [searchText, setSearchText] = useState("");
 
     const filteredEvents = useMemo(() => {
@@ -56,11 +54,11 @@ const MainPage: React.FC = () => {
                     ) : (
                         filteredEvents.map((event, index) => (
                             <EventCard
-                                key={index}
+                                key={event.id ?? index}
                                 id={event.id}
                                 createdByUserId={event.createdByUserId}
                                 title={event.title}
-                                organizer={event.organizer === "You" && event.createdByUserId !== user?.id ? "Organizer" : event.organizer}
+                                organizer={event.organizer}
                                 location={event.location}
                                 price={event.price}
                                 image={event.image}

@@ -93,14 +93,16 @@ const AccountPage: React.FC = () => {
             setFirstName(user.firstName ?? "Current");
             setLastName(user.lastName ?? "Name");
             setEmail(user.email ?? "current@email.com");
-            setSelectedProfileIndex(user.profileImageIndex ?? 0);
+            const idx = user.profileImageIndex ?? 0;
+            setSelectedProfileIndex(idx >= 0 && idx <= 7 ? idx : 0);
             setEmailChangePending(false);
             setOldEmailCode("");
             setNewEmailCode("");
         }
     }, [user]);
 
-    const displayedProfile = profileOptions[user?.profileImageIndex ?? 0] ?? profile0;
+    const rawDisplayIndex = user?.profileImageIndex ?? 0;
+    const displayedProfile = profileOptions[rawDisplayIndex >= 0 && rawDisplayIndex <= 7 ? rawDisplayIndex : 0];
 
     const handleSaveProfile = async () => {
         if (loading || !user) {
@@ -187,6 +189,17 @@ const AccountPage: React.FC = () => {
 
         if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiryDate)) {
             newErrors.expiryDate = "Expiry must be in MM/YY format.";
+        } else {
+            // Reject cards that are already expired.
+            const [mm, yy] = expiryDate.split("/").map(Number);
+            const expiryMonth = mm;
+            const expiryYear = 2000 + yy;
+            const now = new Date();
+            const currentMonth = now.getMonth() + 1;
+            const currentYear = now.getFullYear();
+            if (expiryYear < currentYear || (expiryYear === currentYear && expiryMonth < currentMonth)) {
+                newErrors.expiryDate = "This card has expired.";
+            }
         }
 
         if (!/^\d{3,4}$/.test(cvv)) {
@@ -229,6 +242,14 @@ const AccountPage: React.FC = () => {
         setCvv("");
         setBillingAddress("");
         setErrors({});
+    };
+
+    // Remove a saved card by id from both state and the user's localStorage bucket.
+    const handleRemoveCard = (cardId: number) => {
+        if (!cardStorageKey) return;
+        const updatedCards = savedCards.filter((c) => c.id !== cardId);
+        setSavedCards(updatedCards);
+        localStorage.setItem(cardStorageKey, JSON.stringify(updatedCards));
     };
 
     return (
@@ -473,6 +494,13 @@ const AccountPage: React.FC = () => {
                                                     <small>Billing Address</small>
                                                     <p>{card.billingAddress}</p>
                                                 </div>
+
+                                                <button
+                                                    className="remove-card-btn"
+                                                    onClick={() => handleRemoveCard(card.id)}
+                                                >
+                                                    Remove
+                                                </button>
                                             </div>
                                         ))
                                     )}

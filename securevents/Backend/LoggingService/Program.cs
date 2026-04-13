@@ -1,6 +1,7 @@
 using LoggingService.Data;
 using LoggingService.Middleware;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,11 +39,36 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<LoggingDbContext>();
-    // OWASP A09 hardening support:
-    // Running migrations at startup ensures the audit-log schema exists and remains writable,
-    // preventing silent monitoring failures caused by missing tables/columns.
-    // A03 FIXED: Schema is applied through EF Core migrations, not raw SQL text.
-    db.Database.Migrate();
+    // Two-step database init that handles the multi-service race safely:
+    //  1) Create the database file if it doesn't exist yet.
+    //  2) Create this context's tables if they don't exist yet.
+    // EnsureCreated() alone won't work when another service already created
+    // the DB — it skips table creation if the database already exists.
+    for (var attempt = 1; attempt <= 5; attempt++)
+    {
+        try
+        {
+            var creator = db.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalDatabaseCreator>();
+            if (!creator.Exists())
+            {
+                creator.Create();
+            }
+            creator.CreateTables();
+            break;
+        }
+        catch (Exception ex) when (attempt < 5)
+        {
+            // Table-already-exists errors are fine — means another service
+            // created them or a previous run already did.
+            if (ex.Message.Contains("already an object named") ||
+                ex.Message.Contains("already exists"))
+            {
+                break;
+            }
+            Console.WriteLine($"[LoggingService] DB init attempt {attempt} failed: {ex.Message}. Retrying...");
+            Thread.Sleep(attempt * 2000);
+        }
+    }
 }
 
 app.UseCors("Frontend");

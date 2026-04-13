@@ -78,7 +78,7 @@ const MyEventsPage: React.FC = () => {
                         </div>
                     ) : (
                         myEvents.map((event, index) => (
-                            <MyEventCard key={index} {...event} index={index} />
+                            <MyEventCard key={event.id ?? index} {...event} index={index} />
                         ))
                     )}
                 </div>

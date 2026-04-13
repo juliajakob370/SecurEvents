@@ -445,7 +445,7 @@
         display: block;
         font-size: 11px;
         opacity: 0.8;
-        margin-bottom: 4 px;
+        margin-bottom: 4px;
     }
 
     /* Text inside saved card */
@@ -461,6 +461,25 @@
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     padding-top: 10px;
 }
+
+/* Remove card button */
+.remove-card-btn {
+    margin-top: 4px;
+    padding: 8px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+    .remove-card-btn:hover {
+        background: rgba(255, 60, 60, 0.7);
+        border-color: rgba(255, 60, 60, 0.8);
+    }
 
 /* Empty state text */
 .empty-card-text {
