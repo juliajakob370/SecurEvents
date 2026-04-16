@@ -27,3 +27,5 @@ The app allows users to:
 For more information about the design process, security evaluations and solutions check out our presentation [here!](https://stuconestogacon-my.sharepoint.com/:p:/g/personal/jjakob3896_conestogac_on_ca/IQAfmjKkqyvdRrzKO56jDdtgAeB-0hviBxuq6R08WYmvg5E?e=J7TroJ&nav=eyJzSWQiOjI1NiwiY0lkIjo0MDY3NTM5MDU2fQ)
 
 
+How to Run SecurEvents
+-
