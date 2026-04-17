@@ -90,7 +90,10 @@ How to Run SecurEvents
 
 4. While inside of this folder click in the file path and type `cmd` and enter - this will open the command prompt
    
-   <img width="856" height="308" alt="image" src="https://github.com/user-attachments/assets/eaabc4a9-def8-4526-a28c-bf266a6d5030" />
+   <img width="1223" height="352" alt="image" src="https://github.com/user-attachments/assets/6b8cf9a9-6cb9-4bc3-8cc2-585132bc54e3" />
+   
+   <img width="785" height="287" alt="image" src="https://github.com/user-attachments/assets/ee75ba68-c7fb-4ed9-b633-5439d38227f7" />
+
 
 6. Inside of the command prompt type `npm install` and enter
 7. Once that finishes executing type in `npm run build` and enter
