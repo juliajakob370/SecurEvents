@@ -35,6 +35,8 @@ How to Run SecurEvents
 
 **Setting up the Backend**
 1. Inside of the [securevents](securevents/) directory open up the [Backend](securevents/Backend) folder
+   <img width="707" height="273" alt="image" src="https://github.com/user-attachments/assets/93bdd996-5060-4a2b-b3ce-d0126fcf0a25" />
+
 2. Open the Backend.sln file in Visual Studio
 3. Update the connection string in the app settings
 4. Once it's open in Visual Studio navigate and set up the multi-application start
