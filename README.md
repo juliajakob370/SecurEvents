@@ -33,7 +33,7 @@ How to Run SecurEvents
    
     <img width="707" height="273" alt="image" src="https://github.com/user-attachments/assets/93bdd996-5060-4a2b-b3ce-d0126fcf0a25" />
 
-## Setting up the Backend
+### Setting up the Backend
 1. Inside of the [securevents](securevents/) directory open up the [Backend](securevents/Backend) folder
    
    <img width="650" height="210" alt="image" src="https://github.com/user-attachments/assets/1dfb42f4-f977-4f80-bd74-3b496cdb924c" />
@@ -75,7 +75,7 @@ How to Run SecurEvents
    <img width="1918" height="987" alt="image" src="https://github.com/user-attachments/assets/4b24496b-d2de-460b-9c80-6f8b38b1d2f7" />
 
 
-## Setting up the Frontend
+### Setting up the Frontend
 1. Go back into the file explorer and navigate back into the [securevents](securevents/) directory
 
    <img width="707" height="273" alt="image" src="https://github.com/user-attachments/assets/93bdd996-5060-4a2b-b3ce-d0126fcf0a25" />
