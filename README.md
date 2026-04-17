@@ -31,11 +31,10 @@ How to Run SecurEvents
 -
 1. Clone this repository!
 2. Navigate to the cloned folder and the [securevents](securevents/) directory inside of it
-   <img width="409" height="89" alt="image" src="https://github.com/user-attachments/assets/4c31ce48-f29d-48f3-9cee-742c046d8f93" />
+
 
 **Setting up the Backend**
-The Backend contains 4 microservices that need to be started first.
-1. Inside of the[securevents](securevents/) directory open up the [Backend](securevents/Backend) folder
+1. Inside of the [securevents](securevents/) directory open up the [Backend](securevents/Backend) folder
 2. Open the Backend.sln file in Visual Studio
 3. Update the connection string in the app settings
 4. Once it's open in Visual Studio navigate and set up the multi-application start
