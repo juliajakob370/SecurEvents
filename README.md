@@ -56,15 +56,15 @@ How to Run SecurEvents
 
     b. Select "Configure Startup Projects" from the dropdown
 
-       <img width="707" height="586" alt="image" src="https://github.com/user-attachments/assets/3ad74695-05a3-4db9-9116-18d2d33dcbef" />
+   <img width="707" height="586" alt="image" src="https://github.com/user-attachments/assets/3ad74695-05a3-4db9-9116-18d2d33dcbef" />
 
     c. Configure the settings to be "Mulitple Startup Projects" and set all Project Actions to start
 
-       <img width="800" alt="image" src="https://github.com/user-attachments/assets/6578f5f2-a4a5-41d4-9225-7d644dee522c" />
+   <img width="800" alt="image" src="https://github.com/user-attachments/assets/6578f5f2-a4a5-41d4-9225-7d644dee522c" />
 
     d. Select "Ok" to save the changes
 
-       <img width="997" height="684" alt="image" src="https://github.com/user-attachments/assets/7940745b-58ca-4d6f-b99f-3c99d96f105b" />
+   <img width="997" height="684" alt="image" src="https://github.com/user-attachments/assets/7940745b-58ca-4d6f-b99f-3c99d96f105b" />
 
 
 7. Press Start
